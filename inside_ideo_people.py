@@ -12,17 +12,15 @@ import sys
 import sys
 from bs4 import BeautifulSoup
 from dropbox import settings as dropbox_settings
-from lxml import etree
 from tqdm import *
 
 if __name__ == '__main__':
     sys.setrecursionlimit(3000)
 
     # target_url = 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=3'
-    target_url2 = 'https://inside.ideo.com/users/search?_=1519678038902&page=2&replace=false&sort=relevance&sort_dir=desc&sort_direction_name=desc&user_location_ids%5B%5D=3'
-    target_url1 = 'https://inside.ideo.com/users/search?_=1519678038902&page=1&replace=false&sort=relevance&sort_dir=desc&sort_direction_name=desc&user_location_ids%5B%5D=3'
+    base_url = 'https://inside.ideo.com/users/search?_=1519678038902&page={}&replace=false&sort=relevance&sort_dir=desc&sort_direction_name=desc&user_location_ids%5B%5D=3'
 
-    target_urls = [target_url1, target_url2]
+    target_urls = [base_url.format(1), base_url.format(2)]
 
     people_urls = []
 
@@ -41,5 +39,17 @@ if __name__ == '__main__':
 
     count = 0
     for url in people_urls:
-        print(count, url)
-        count += 1
+        url.replace('\\', '').strip()
+        target_url = 'https://inside.ideo.com' + url.replace('\"', '').replace('\\', '')
+
+        print(count, target_url)
+
+        response = requests.get(target_url,
+                                headers=dropbox_settings.HEADERS,
+                                timeout=5,
+                                )
+        print(response.content)
+        count +=1
+
+
+
