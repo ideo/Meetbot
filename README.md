@@ -4,7 +4,7 @@ This is a repo to automatically create lunch or coffee dates for IDEOers,
 because it's better for a computer to coordinate Google calendar schedules
 than a human.
 
-We borrowed heavily from [looking-in](https://github.com/ideo/paired-lunch/).
+We borrowed heavily from [looking-in](https://github.com/ideo/looking-in/).
 
 ## Initial setup
 
