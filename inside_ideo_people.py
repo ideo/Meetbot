@@ -76,7 +76,9 @@ if __name__ == '__main__':
     combined_list = []
     for url in people_urls:
         url.replace('\\', '').strip()
-        target_url = 'https://inside.ideo.com' + url.replace('\"', '').replace('\\', '')
+        user = url.split('/')[-1].split('\\')[0]
+        target_url = 'https://inside.ideo.com/users/' + user
+        print('this is the target url', target_url)
 
         response = requests.get(target_url,
                                 headers=dropbox_settings.HEADERS,
@@ -93,12 +95,25 @@ if __name__ == '__main__':
                 for info_list in info_dict:
                     parse_response(info_list, keys_of_interest, single_person_dict)
 
+        print('the user', user)
+        #sys.exit()
+
+        project_page_url = 'https://inside.ideo.com/users/{}/my_work'.format(user)
+
+
+        response = requests.get(project_page_url,
+                                headers=dropbox_settings.HEADERS,
+                                timeout=5,
+                                )
+        print('project page url', project_page_url)
+        print(response.content)
+        print(' ')
+
         combined_list.append(single_person_dict)
 
-        # print(single_person_dict)
-        # print(' ')
-        # info = json.loads(response.content)[0]
-        # print(info)
+
+
+
 
     people_info_df = pd.DataFrame(combined_list)
     people_info_df.to_csv('people_info.csv', index=False)
