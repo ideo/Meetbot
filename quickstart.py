@@ -8,6 +8,7 @@ from oauth2client import tools
 from oauth2client.file import Storage
 
 import datetime
+import pytz
 
 try:
     import argparse
@@ -20,7 +21,6 @@ except ImportError:
 SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Google Calendar API Python Quickstart'
-
 
 def get_credentials():
     """Gets valid user credentials from storage.
@@ -53,29 +53,47 @@ def get_credentials():
     return credentials
 
 def main():
-    """Shows basic usage of the Google Calendar API.
-
-    Creates a Google Calendar API service object and outputs a list of the next
-    10 events on the user's calendar.
+    """
+    Returns a list of dictionaries of start and end times of all busy 
+    windows in the next `time_window` days for all of the people in
+    `triad` (list of emails) 
+    
     """
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print('Getting the upcoming 10 events')
-    eventsResult = service.events().list(
-        calendarId='mmoliterno@ideo.com', timeMin=now, maxResults=10, singleEvents=True,
-        orderBy='startTime').execute()
-    events = eventsResult.get('items', [])
+    #print('Getting the upcoming 10 events')
+    #eventsResult = service.events().list(
+    #    calendarId='lnash@ideo.com', 
+    #    timeMin=now,
+    #    maxResults=10, 
+    #    singleEvents=True,
+    #    ).execute()
+    #events = eventsResult.get('items', [])
 
-    if not events:
-        print('No upcoming events found.')
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        end = event['end'].get('dateTime', event['end'].get('date'))
-        print(start, end)
+    #if not events:
+    #    print('No upcoming events found.')
+    #for event in events:
+    #    start = event['start'].get('dateTime', event['start'].get('date'))
+    #    end = event['end'].get('dateTime', event['end'].get('date'))
+    #    print(start, end)
 
+    triad = ['lnash@ideo.com', 'jzanzig@ideo.com', 'mmoliterno@ideo.com']
+    time_window = datetime.timedelta(days=7)
+    # Got code to get freebusy times from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
+    body = {
+      "timeMin": now,
+      "timeMax": (datetime.datetime.utcnow() + time_window).isoformat() + 'Z',
+      "timeZone": 'US/Central',
+      "items": [{"id": email} for email in triad]
+    }
+
+    eventsResult = service.freebusy().query(body=body).execute()
+    cal_dict = eventsResult[u'calendars']
+    for cal_name in cal_dict:
+        print(cal_name, cal_dict[cal_name])
 
 if __name__ == '__main__':
     main()
