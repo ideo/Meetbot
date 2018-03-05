@@ -66,6 +66,9 @@ if __name__ == '__main__':
                                 timeout=5,
                                 )
 
+        print(response.content)
+        print(' ')
+        sys.exit()
         soup = BeautifulSoup(response.text, "lxml")
 
         people_info = soup.find_all('a', {'class': ['\\"js-headshot-wrapper\\"']})
@@ -85,6 +88,8 @@ if __name__ == '__main__':
                                 timeout=5,
                                 )
         # turn content into a dictionary
+        print(response.content)
+        print(' ')
         person_info = json.loads(response.content)
 
         # extract info that we want

@@ -79,21 +79,26 @@ def calculate_triad_score(triads, combined):
 
     discipline_weight = 5
     journey_weight = 2
-    meetings_weight = 1
-
+    new_hire_weight = 4
 
     dis_count = 0
     journey_count = 0
+    new_hire_score = 0
     for index, row in triads.iterrows():
         triad_data = combined[combined['email_address'].isin(row)]
 
-        num_disciplines = len(triad_data.discipline.unique())
-        num_journies = len(triad_data.Journey.unique())
+        num_disciplines = len(triad_data.discipline.unique()) / len(triad_data)
+        num_journies = len(triad_data.Journey.unique()) / len(triad_data)
+
+        hire_delta = datetime.now() - triad_data['Anniversary']
+        num_new_hires = (hire_delta < pd.Timedelta(days=180)).sum() / len(triad_data)
 
         dis_count += num_disciplines
         journey_count += num_journies
+        new_hire_score += num_new_hires
 
-    return (discipline_weight * dis_count + journey_weight * num_journies) / len(triads)
+    return (discipline_weight * dis_count + journey_weight * num_journies + new_hire_score * new_hire_weight) / len(
+        triads), new_hire_score
 
 
 def generate_random_list(group_settings):
@@ -124,12 +129,12 @@ def generate_random_list(group_settings):
 
 
 if __name__ == '__main__':
-    directory = pd.read_csv('./data/ChIDEO_directory.csv')
+    directory = pd.read_csv('./data/ChIDEO_directory.csv', parse_dates=['Anniversary'])
     inside_ideo = pd.read_csv('people_info.csv')
 
     combined = inside_ideo.merge(directory, left_on='email_address', right_on='Email')
 
-    combined = combined[['email_address', 'Journey', 'discipline']]
+    combined = combined[['email_address', 'Journey', 'discipline', 'Anniversary']]
 
     highest = 0
 
@@ -138,7 +143,7 @@ if __name__ == '__main__':
 
     for i in range(50):
         triads = generate_random_list(settings)
-        score = calculate_triad_score(triads, combined)
+        score, nh_score = calculate_triad_score(triads, combined)
 
         if i == 0:
             lowest = score
@@ -146,12 +151,14 @@ if __name__ == '__main__':
         if score > highest:
             highest = score
             highest_grouping = triads
+            nh_score_high = nh_score
 
         if score < lowest:
             lowest = score
             lowest_grouping = triads
+            nh_score_low = nh_score
 
-    print('min ', lowest)
-    print('max ', highest)
-    highest_grouping.to_csv('./best_worst_function/best_grouping.csv')
-    lowest_grouping.to_csv('./best_worst_function/worst_grouping.csv')
+    print('min ', lowest, nh_score_low)
+    print('max ', highest, nh_score_high)
+    highest_grouping.to_csv('./best_worst_function/best_grouping.csv', index=False)
+    lowest_grouping.to_csv('./best_worst_function/worst_grouping.csv', index=False)
