@@ -3,7 +3,7 @@ from __future__ import print_function
 import datetime
 import httplib2
 import os
-import pytz
+
 from apiclient import discovery
 from oauth2client import client
 from oauth2client import tools
