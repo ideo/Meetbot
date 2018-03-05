@@ -71,7 +71,7 @@ def main():
 
     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
     
-    triad = ['lnash@ideo.com', 'jzanzig@ideo.com', 'mmoliterno@ideo.com'] #TODO: un-hardcode this :)
+    triad = ['lnash@ideo.com', 'jzanzig@ideo.com'] #TODO: un-hardcode this :)
     time_window = datetime.timedelta(days=7) # ...and this :) 
     
     # Got code to get freebusy times from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
@@ -97,11 +97,10 @@ def main():
     # combine all of the calendars -- the times when the sum is 0 everyone is free
     # thresholding finds all that are greater than 0, i.e. returns a boolean indicating when
     # at least one group member is busy
-    # TODO: check that the time window is large enough
+    # TODO: check that the time window is large enough, and timebox (e.g. within business hours)
     combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum).threshold(0)
     eligible_times = [i[0] for i in combined_free_times.items() if i[1] is False]
     event_time = eligible_times[0] # for now, take first time that works. we can refine this 
-    print(event_time)
     
     # now create an event on the calendar! 
     event = {
@@ -116,8 +115,7 @@ def main():
             
         },
  
-        'attendees': [{"email": 'jzanzig@ideo.com'},
-                     ],
+        'attendees': [{"email": email} for email in triad],
 
     }
 
