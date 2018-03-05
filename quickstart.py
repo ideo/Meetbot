@@ -109,8 +109,8 @@ def main():
         'end': {
             'dateTime': '2018-03-05T12:00:00-06:00',
         },
-        'attendees': {[{"email": email} for email in triad]
-                    },
+        'attendees': [{"email": 'jzanzig@ideo.com'},
+                     ],
 
     }
 
