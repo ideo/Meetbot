@@ -1,3 +1,4 @@
+import json
 import pandas as pd
 import settings
 from datetime import datetime, timedelta
@@ -23,7 +24,7 @@ def generate_triad(group_settings):
 
     weight_factor = 50
 
-    people_info_df = pd.read_csv(settings.info_path, parse_dates=['hired_at'])
+    people_info_df = pd.read_csv(settings.inside_ideo_csv, parse_dates=['hired_at'])
     people_info_df['tenure'] = datetime.now() - people_info_df['hired_at']
     people_info_df['number_of_meetings'] = 0  # keep track of how many groups someone is in
 
@@ -47,7 +48,7 @@ def generate_triad(group_settings):
         everyone_else = people_info_df[~people_info_df.index.isin(new_hire.index)]
 
         # grab the other two people! (if there are two other people!
-        others = sample_df(everyone_else, 2, weight_factor)
+        others = sample_df(everyone_else, number_in_group - 1, weight_factor)
 
         triad = pd.concat([new_hire, others])
 
@@ -76,10 +77,9 @@ def calculate_triad_score(triads, combined):
     # people with more than one meeting
     # relationship score -> this should be calculated from previous lunch + project data
 
-
     discipline_weight = 5
     journey_weight = 2
-    new_hire_weight = 4
+    new_hire_weight = 0
 
     dis_count = 0
     journey_count = 0
@@ -106,7 +106,7 @@ def generate_random_list(group_settings):
     max_meetings = group_settings.max_meetings
     weight_factor = 50
 
-    people_info_df = pd.read_csv(settings.info_path, parse_dates=['hired_at'])
+    people_info_df = pd.read_csv(settings.inside_ideo_csv, parse_dates=['hired_at'])
 
     people_info_df['number_of_meetings'] = 0  # keep track of how many groups someone is in
 
@@ -130,8 +130,9 @@ def generate_random_list(group_settings):
 
 if __name__ == '__main__':
     directory = pd.read_csv(settings.chideo_directory, parse_dates=['Anniversary'])
-    with open('./data/people_info.json') as json_data:
-        inside_ideo = json.load(json_data)
+    inside_ideo = pd.read_csv(settings.inside_ideo_csv)
+    with open(settings.inside_ideo_json) as json_data:
+        project_lists = json.load(json_data)
 
     combined = inside_ideo.merge(directory, left_on='email_address', right_on='Email')
 
@@ -142,8 +143,8 @@ if __name__ == '__main__':
     highest_grouping = []
     lowest_grouping = []
 
-    for i in range(10):
-        triads = generate_triad(settings)
+    for i in range(25):
+        triads = generate_random_list(settings)
         score, nh_score = calculate_triad_score(triads, combined)
 
         if i == 0:
@@ -161,5 +162,5 @@ if __name__ == '__main__':
 
     print('min ', lowest, nh_score_low)
     print('max ', highest, nh_score_high)
-    highest_grouping.to_csv('./best_worst_function/best_grouping.csv', index=False)
-    lowest_grouping.to_csv('./best_worst_function/worst_grouping.csv', index=False)
+    highest_grouping.to_csv(settings.save_directory + 'best_grouping_generate_random_list.csv', index=False)
+    lowest_grouping.to_csv(settings.save_directory + 'worst_grouping_generate_random_list.csv', index=False)
