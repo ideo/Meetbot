@@ -68,4 +68,4 @@ if __name__ == '__main__':
 
     print(suggested_triads)
     suggested_triad_df = pd.DataFrame(suggested_triads, columns=['person_1', 'person_2', 'person_3'])
-    suggested_triad_df.to_csv('suggested_triads.csv')
+    suggested_triad_df.to_csv('suggested_triads.csv', index = False)

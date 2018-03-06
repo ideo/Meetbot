@@ -129,8 +129,9 @@ def generate_random_list(group_settings):
 
 
 if __name__ == '__main__':
-    directory = pd.read_csv('./data/ChIDEO_directory.csv', parse_dates=['Anniversary'])
-    inside_ideo = pd.read_csv('people_info.csv')
+    directory = pd.read_csv(settings.chideo_directory, parse_dates=['Anniversary'])
+    with open('./data/people_info.json') as json_data:
+        inside_ideo = json.load(json_data)
 
     combined = inside_ideo.merge(directory, left_on='email_address', right_on='Email')
 
@@ -141,8 +142,8 @@ if __name__ == '__main__':
     highest_grouping = []
     lowest_grouping = []
 
-    for i in range(50):
-        triads = generate_random_list(settings)
+    for i in range(10):
+        triads = generate_triad(settings)
         score, nh_score = calculate_triad_score(triads, combined)
 
         if i == 0:
