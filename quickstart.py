@@ -55,24 +55,32 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
+def check_time(series, start, end):
+    """Check if a TimeSeries is 0 for all subintervals within a given
+    interval(i.e. is this person free the whole time?) because traces.TimeSeries.slice()
+    is broken. Arguments: `series` (a traces.TimeSeries object), `start`/`end` (strings)    
+    """
+    slice = [i[2] for i in series.iterperiods(start=start, end=end)]
+    if sum(slice) == 0:
+        return True
+    else:
+        return False
+
 def main():
-    """
-    Returns a list of dictionaries of start and end times of all busy 
-    windows in the next `time_window` days for all of the people in
-    `triad` (list of emails) 
     
-    """
-    print('running something')
     event_duration = datetime.timedelta(hours=1, minutes=20) # how long should lunch (or coffee) last?
+    earliest_time = 9 # in datetime "hours" (i.e. in range(24)) 
+    latest_time = 18 
+    time_window = datetime.timedelta(days=7) # number of days to look ahead for a potential window
+    triad = ['lnash@ideo.com', 'jzanzig@ideo.com'] # TODO: unhardcode this :)
+    event_name = 'Test Event'
+    event_description = 'lorem ipsum'
 
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     service = discovery.build('calendar', 'v3', http=http)
 
     now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-    
-    triad = ['lnash@ideo.com', 'jzanzig@ideo.com'] #TODO: un-hardcode this :)
-    time_window = datetime.timedelta(days=7) # ...and this :) 
     
     # Got code to get freebusy times from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
     body = {
@@ -97,15 +105,14 @@ def main():
     # combine all of the calendars -- the times when the sum is 0 everyone is free
     # thresholding finds all that are greater than 0, i.e. returns a boolean indicating when
     # at least one group member is busy
-    # TODO: check that the time window is large enough, and timebox (e.g. within business hours)
     combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum).threshold(0)
-    eligible_times = [i[0] for i in combined_free_times.items() if i[1] is False]
+    eligible_times = [i[0] for i in combined_free_times.items() if check_time(combined_free_times, start=i[0], end=(dateutil.parser.parse(i[0]) + event_duration).isoformat()) and (dateutil.parser.parse(i[0]).hour > earliest_time) and ((dateutil.parser.parse(i[0]) + event_duration).hour < latest_time)]
     event_time = eligible_times[0] # for now, take first time that works. we can refine this 
     
     # now create an event on the calendar! 
     event = {
-        'summary': 'Test Event!',
-        'description': 'Lorem ipsum',
+        'summary': event_name,
+        'description': event_description,
         'start': {
             'dateTime': event_time, 
 
