@@ -1,14 +1,11 @@
-import gzip
 import json
-import jsonlines
 import os
 import pandas as pd
 import pprint
 import re
 import requests
-import requests_cache
+import settings
 import socket
-import sys
 import sys
 from bs4 import BeautifulSoup
 from dropbox import settings as dropbox_settings
@@ -66,9 +63,6 @@ if __name__ == '__main__':
                                 timeout=5,
                                 )
 
-        print(response.content)
-        print(' ')
-        sys.exit()
         soup = BeautifulSoup(response.text, "lxml")
 
         people_info = soup.find_all('a', {'class': ['\\"js-headshot-wrapper\\"']})
@@ -77,6 +71,7 @@ if __name__ == '__main__':
             people_urls.append(div['href'].strip())
 
     combined_list = []
+    project_lists = []
     for url in people_urls:
         url.replace('\\', '').strip()
         user = url.split('/')[-1].split('\\')[0]
@@ -88,37 +83,47 @@ if __name__ == '__main__':
                                 timeout=5,
                                 )
         # turn content into a dictionary
-        print(response.content)
-        print(' ')
+
         person_info = json.loads(response.content)
 
         # extract info that we want
         single_person_dict = {}
+        single_person_projects = {}
         for info_dict in person_info:
             parser_response = parse_response(info_dict, keys_of_interest, single_person_dict)
             if parser_response == AttributeError:
                 for info_list in info_dict:
                     parse_response(info_list, keys_of_interest, single_person_dict)
 
-        print('the user', user)
-        #sys.exit()
+        # sys.exit()
 
-        project_page_url = 'https://inside.ideo.com/users/{}/my_work'.format(user)
-
+        project_page_url = 'https://inside.ideo.com/users/{}/get_my_work_projects'.format(user)
 
         response = requests.get(project_page_url,
                                 headers=dropbox_settings.HEADERS,
                                 timeout=5,
                                 )
-        print('project page url', project_page_url)
-        print(response.content)
-        print(' ')
+
+        try:
+            project_jsons = response.json()['projects']['Core team']
+            project_id_list = []
+            project_name_list = []
+            projects = {}
+            for p_json in project_jsons:
+                project_id_list.append(p_json['id'])
+                project_name_list.append(p_json['name'])
+                projects[p_json['id']] = p_json['name']
+            single_person_projects[user] = project_id_list
+
+        except KeyError:
+            single_person_projects[user] = []
 
         combined_list.append(single_person_dict)
+        project_lists.append(single_person_projects)
 
-
-
-
+    with open(settings.inside_ideo_json, 'w') as fp:
+        json.dump(project_lists, fp)
+    print('saved file ', settings.inside_ideo_json)
 
     people_info_df = pd.DataFrame(combined_list)
-    people_info_df.to_csv('people_info.csv', index=False)
+    people_info_df.to_csv(settings.inside_ideo_csv, index=False)
