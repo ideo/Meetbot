@@ -1,7 +1,7 @@
 import json
+import numpy as np
 import pandas as pd
 import settings
-import numpy as np
 from datetime import datetime, timedelta
 
 
@@ -29,13 +29,27 @@ def generate_triad(group_settings):
     people_info_df['tenure'] = datetime.now() - people_info_df['hired_at']
     people_info_df['number_of_meetings'] = 0  # keep track of how many groups someone is in
 
+    people_info_df['max_meetings'] = 2
+
+    # set for specific people
+    special_number = group_settings.number_of_meetings_dict
+    special_number_emails = special_number.keys()
+
+    for email in special_number_emails:
+        mask = people_info_df.email_address == email
+        people_info_df.loc[mask, 'max_meetings'] = special_number[email]
+
     new_hire_delta = pd.Timedelta(days=new_hire_days)
     suggested_triads = []
+
+    people_info_df = people_info_df[
+        people_info_df.max_meetings > 0]  # get rid of people we don't want to assign at all this month
 
     while (sum(people_info_df.number_of_meetings < min_meetings) > 0):
 
         # exclude everyone who's been paired too many times
-        people_info_df = people_info_df[people_info_df.number_of_meetings < max_meetings]  # these people are eligible
+        people_info_df = people_info_df[
+            people_info_df.number_of_meetings < people_info_df.max_meetings]  # these people are eligible
 
         new_hire_mask = new_hire_delta > people_info_df[
             'tenure']  # update every iteration
@@ -110,12 +124,9 @@ def calculate_triad_score(triads, combined, project_lists):
     core_project_weight = -2
     new_hire_weight = 0
 
-    dis_count = 0
-    journey_count = 0
-    new_hire_score = 0
-    project_score = 0
     triad_scores = []
     for index, row in triads.iterrows():
+
         triad_data = combined[combined['email_address'].isin(row)]
 
         group_projects = []
@@ -137,7 +148,6 @@ def calculate_triad_score(triads, combined, project_lists):
 
         if ds_count > 1:
             num_disciplines = num_disciplines - 1
-
 
         num_journies = len(triad_data.Journey.unique()) / len(triad_data)
 
@@ -183,7 +193,6 @@ if __name__ == '__main__':
         if score < lowest:
             lowest = score
             lowest_grouping = triads
-
 
     print(lowest, highest)
     highest_grouping.to_csv(settings.save_directory + 'best_grouping_generate_triad.csv', index=False)
