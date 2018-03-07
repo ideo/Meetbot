@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import settings
+import numpy as np
 from datetime import datetime, timedelta
 
 
@@ -22,7 +23,7 @@ def generate_triad(group_settings):
 
     new_hire_days = group_settings.new_hire_days
 
-    weight_factor = 50
+    weight_factor = group_settings.weight_factor
 
     people_info_df = pd.read_csv(settings.inside_ideo_csv, parse_dates=['hired_at'])
     people_info_df['tenure'] = datetime.now() - people_info_df['hired_at']
@@ -71,40 +72,10 @@ def generate_triad(group_settings):
     return suggested_triad_df
 
 
-def calculate_triad_score(triads, combined):
-    # number of disciplines
-    # number of journeys
-    # people with more than one meeting
-    # relationship score -> this should be calculated from previous lunch + project data
-
-    discipline_weight = 5
-    journey_weight = 2
-    new_hire_weight = 0
-
-    dis_count = 0
-    journey_count = 0
-    new_hire_score = 0
-    for index, row in triads.iterrows():
-        triad_data = combined[combined['email_address'].isin(row)]
-
-        num_disciplines = len(triad_data.discipline.unique()) / len(triad_data)
-        num_journies = len(triad_data.Journey.unique()) / len(triad_data)
-
-        hire_delta = datetime.now() - triad_data['Anniversary']
-        num_new_hires = (hire_delta < pd.Timedelta(days=180)).sum() / len(triad_data)
-
-        dis_count += num_disciplines
-        journey_count += num_journies
-        new_hire_score += num_new_hires
-
-    return (discipline_weight * dis_count + journey_weight * num_journies + new_hire_score * new_hire_weight) / len(
-        triads), new_hire_score
-
-
 def generate_random_list(group_settings):
     number_in_group = group_settings.number_in_group
     max_meetings = group_settings.max_meetings
-    weight_factor = 50
+    weight_factor = group_settings.weight_factor
 
     people_info_df = pd.read_csv(settings.inside_ideo_csv, parse_dates=['hired_at'])
 
@@ -128,6 +99,62 @@ def generate_random_list(group_settings):
     return suggested_triad_df
 
 
+def calculate_triad_score(triads, combined, project_lists):
+    # number of disciplines
+    # number of journeys
+    # people with more than one meeting
+    # relationship score -> this should be calculated from previous lunch + project data
+
+    discipline_weight = 5
+    journey_weight = 1
+    core_project_weight = -2
+    new_hire_weight = 0
+
+    dis_count = 0
+    journey_count = 0
+    new_hire_score = 0
+    project_score = 0
+    triad_scores = []
+    for index, row in triads.iterrows():
+        triad_data = combined[combined['email_address'].isin(row)]
+
+        group_projects = []
+        for email_address in row:
+            projects = project_lists[email_address]
+            for project in projects:
+                group_projects.append(project)
+
+        group_projects = pd.Series(group_projects)
+        group_projects = group_projects.value_counts() - 1
+
+        num_overlap = group_projects.sum()
+        num_disciplines = len(triad_data.discipline.unique()) / len(triad_data)
+
+        try:
+            ds_count = triad_data['discipline'].value_counts()['Data Science']
+        except KeyError:
+            ds_count = 0
+
+        if ds_count > 1:
+            num_disciplines = num_disciplines - 1
+
+
+        num_journies = len(triad_data.Journey.unique()) / len(triad_data)
+
+        hire_delta = datetime.now() - triad_data['Anniversary']
+        num_new_hires = (hire_delta < pd.Timedelta(days=180)).sum() / len(triad_data)
+
+        dis_count += num_disciplines
+        journey_count += num_journies
+        new_hire_score += num_new_hires
+        project_score += num_overlap
+
+        triad_score = discipline_weight * num_disciplines + journey_weight * journey_count + num_new_hires * new_hire_weight + core_project_weight * num_overlap
+        triad_scores.append(triad_score)
+
+    return triad_scores
+
+
 if __name__ == '__main__':
     directory = pd.read_csv(settings.chideo_directory, parse_dates=['Anniversary'])
     inside_ideo = pd.read_csv(settings.inside_ideo_csv)
@@ -143,9 +170,13 @@ if __name__ == '__main__':
     highest_grouping = []
     lowest_grouping = []
 
-    for i in range(25):
-        triads = generate_random_list(settings)
-        score, nh_score = calculate_triad_score(triads, combined)
+    for i in range(20):
+        triads = generate_triad(settings)
+
+        score_list = calculate_triad_score(triads, combined, project_lists)
+
+        score = np.median(np.array(score_list))
+        triads['score'] = score_list
 
         if i == 0:
             lowest = score
@@ -153,14 +184,13 @@ if __name__ == '__main__':
         if score > highest:
             highest = score
             highest_grouping = triads
-            nh_score_high = nh_score
 
         if score < lowest:
             lowest = score
             lowest_grouping = triads
-            nh_score_low = nh_score
 
-    print('min ', lowest, nh_score_low)
-    print('max ', highest, nh_score_high)
-    highest_grouping.to_csv(settings.save_directory + 'best_grouping_generate_random_list.csv', index=False)
-    lowest_grouping.to_csv(settings.save_directory + 'worst_grouping_generate_random_list.csv', index=False)
+
+    print(lowest, highest)
+    highest_grouping.to_csv(settings.save_directory + 'best_grouping_generate_triad.csv', index=False)
+    lowest_grouping.to_csv(settings.save_directory + 'worst_grouping_generate_triad.csv', index=False)
+    print('saved ', settings.save_directory + 'best_grouping_generate_triad.csv')
