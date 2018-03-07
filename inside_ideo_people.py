@@ -71,7 +71,7 @@ if __name__ == '__main__':
             people_urls.append(div['href'].strip())
 
     combined_list = []
-    project_lists = []
+    project_lists = {}
     for url in people_urls:
         url.replace('\\', '').strip()
         user = url.split('/')[-1].split('\\')[0]
@@ -88,7 +88,7 @@ if __name__ == '__main__':
 
         # extract info that we want
         single_person_dict = {}
-        single_person_projects = {}
+
         for info_dict in person_info:
             parser_response = parse_response(info_dict, keys_of_interest, single_person_dict)
             if parser_response == AttributeError:
@@ -113,13 +113,12 @@ if __name__ == '__main__':
                 project_id_list.append(p_json['id'])
                 project_name_list.append(p_json['name'])
                 projects[p_json['id']] = p_json['name']
-            single_person_projects[user] = project_id_list
+            project_lists[single_person_dict['email_address']] = project_id_list
 
         except KeyError:
-            single_person_projects[user] = []
+            project_lists[single_person_dict['email_address']] = []
 
         combined_list.append(single_person_dict)
-        project_lists.append(single_person_projects)
 
     with open(settings.inside_ideo_json, 'w') as fp:
         json.dump(project_lists, fp)
