@@ -144,12 +144,7 @@ def calculate_triad_score(triads, combined, project_lists):
         hire_delta = datetime.now() - triad_data['Anniversary']
         num_new_hires = (hire_delta < pd.Timedelta(days=180)).sum() / len(triad_data)
 
-        dis_count += num_disciplines
-        journey_count += num_journies
-        new_hire_score += num_new_hires
-        project_score += num_overlap
-
-        triad_score = discipline_weight * num_disciplines + journey_weight * journey_count + num_new_hires * new_hire_weight + core_project_weight * num_overlap
+        triad_score = discipline_weight * num_disciplines + journey_weight * num_journies + num_new_hires * new_hire_weight + core_project_weight * num_overlap
         triad_scores.append(triad_score)
 
     return triad_scores
