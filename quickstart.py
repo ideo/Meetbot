@@ -55,16 +55,56 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
-def check_time(series, start, end):
-    """Check if a TimeSeries is 0 for all subintervals within a given
-    interval(i.e. is this person free the whole time?) because traces.TimeSeries.slice()
-    is broken. Arguments: `series` (a traces.TimeSeries object), `start`/`end` (strings)    
+def slice(series, start, end, default=0):
+
+    result = traces.TimeSeries(default=default)
+
+    for t0, t1, value in series.iterperiods(start, end):
+        result[t0] = value
+    
+    result[t1] = series[t1]
+    return result
+
+def interim_periods(series, increment=15):
+    """ Get incremented. Takes series (traces.TimeSeries), increment in 
+    number of minutes (integer). Results a traces.TimeSeries object with
+    timepoints for each of the periods and the value of the original 
+    TimeSeries at that point 
     """
-    slice = [i[2] for i in series.iterperiods(start=start, end=end)]
-    if sum(slice) == 0:
-        return True
-    else:
-        return False
+    
+    result = traces.TimeSeries(default=series.default)
+    increment = datetime.timedelta(minutes=increment)
+
+    t1 = series.items()[0][0]
+    end = series.items()[-1][0]
+
+    while t1 < end:
+        result[t1] = series[t1] 
+        t1 = (dateutil.parser.parse(t1) + increment).isoformat()
+
+    result[end] = series[end] 
+    return result 
+
+def check_interval(series, event_duration):
+    """Check if a TimeSeries is 0 for all subintervals within a given time window,
+    because being free at the beginning of the meeting != being free for the whole
+    meeting time.    
+    Arguments: `series` (a traces.TimeSeries object), event_duration (timedelta)
+    Returns a TimeSeries where the values represent the intervals starting at the 
+    measurement times, and the observations are the sum of all observations within
+    the intervals of length event_duration beginning at that time (so a person is 
+    free for the entire time window iff the observed value is 0).
+    """
+
+    result = traces.TimeSeries(default=series.default)
+
+    for t0 in series.items():
+        start = t0[0]
+        end = (dateutil.parser.parse(start) + event_duration).isoformat()
+        subseries = [i[1] for i in slice(series, start=start, end=end).items()]
+        result[start] = sum(subseries)
+
+    return result 
 
 def main():
     
@@ -105,8 +145,16 @@ def main():
     # combine all of the calendars -- the times when the sum is 0 everyone is free
     # thresholding finds all that are greater than 0, i.e. returns a boolean indicating when
     # at least one group member is busy
-    combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum).threshold(0)
-    eligible_times = [i[0] for i in combined_free_times.items() if check_time(combined_free_times, start=i[0], end=(dateutil.parser.parse(i[0]) + event_duration).isoformat()) and (dateutil.parser.parse(i[0]).hour > earliest_time) and ((dateutil.parser.parse(i[0]) + event_duration).hour < latest_time)]
+    combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
+    all_start_times = interim_periods(combined_free_times) # break out free times into 15-min intervals
+    all_intervals = check_interval(all_start_times, event_duration).to_bool(invert=True)
+    
+    eligible_times = [i[0] for i in all_intervals.items() if i[1] is True]
+    # TODO: bring back thresholding by hour of day! 
+#        if check_interval(combined_free_times, start=start, end=end) \
+#        and (start.hour > earliest_time) and (end.hour < latest_time): 
+#            eligible_times.append(start)
+
     event_time = eligible_times[0] # for now, take first time that works. we can refine this 
     
     # now create an event on the calendar! 
