@@ -18,6 +18,8 @@ min_meetings = 1
 max_meetings = 2
 new_hire_days = 180
 
+min_score = 2
+
 # special settings
 
 number_of_meetings_dict = {'mandywong@ideo.com': 0, 'tlee@ideo.com': 0, 'dlee@ideo.com': 0, 'matthewgs@ideo.com': 0
