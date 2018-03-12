@@ -39,7 +39,8 @@ class BatchGenerator:
             output = df_to_sample
         return output
 
-    def recode_disciplines(self):
+    #TODO: write this
+    #def recode_disciplines(self):
         # recodes support disicplines
 
 
