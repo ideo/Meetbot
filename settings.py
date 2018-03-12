@@ -18,7 +18,7 @@ min_meetings = 1
 max_meetings = 2
 new_hire_days = 180
 
-min_score = 2
+min_score = 8
 
 # special settings
 
