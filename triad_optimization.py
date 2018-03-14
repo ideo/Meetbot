@@ -27,8 +27,8 @@ class BatchGenerator:
         self.number_of_meetings_dict = batch_settings.number_of_meetings_dict
 
         self.min_score = batch_settings.min_score
-
-        # score_weights = batch_settings.score_weights  # TODO: Make this a real thing later
+        self.score_weights = batch_settings.score_weights
+        self.perfect_score = self.scoring_function(batch_settings.ideal_group)
 
     def sample_df(self, df_to_sample, number_to_sample):
 
@@ -57,18 +57,9 @@ class BatchGenerator:
         return recoded_df
 
     def calculate_triad_score(self, triad):
-        # number of disciplines
-        # number of journeys
-        # people with more than one meeting
-        # relationship score -> this should be calculated from previous lunch + project data
 
         combined = self.combined
         triad_data = combined[combined['email_address'].isin(triad.email_address)]
-
-        discipline_weight = 6
-        journey_weight = 2
-        core_project_weight = -2
-        new_hire_weight = 0
 
         group_projects = []
         for email_address in triad.email_address:
@@ -81,7 +72,8 @@ class BatchGenerator:
 
         num_overlap = group_projects.sum()
 
-        num_disciplines = len(triad_data.discipline.unique()) / len(triad_data)
+        num_disciplines = len(triad_data.discipline.unique())
+
         # penalize 2 data scientists
         try:
             ds_count = triad_data['discipline'].value_counts()['Data Science']
@@ -100,7 +92,7 @@ class BatchGenerator:
         triad_journies = np.array([journey_number[i] for i in triad_data.Journey])
 
         if len(triad_journies[triad_journies >= 3]) > 1:
-            sub = 2
+            sub = 4
         else:
             sub = 0
 
@@ -109,8 +101,22 @@ class BatchGenerator:
         hire_delta = datetime.now() - triad_data['hired_at']
         num_new_hires = (hire_delta < pd.Timedelta(days=180)).sum() / len(triad_data)
 
-        triad_score = discipline_weight * num_disciplines + journey_weight * num_journies \
-                      + num_new_hires * new_hire_weight + core_project_weight * num_overlap
+        score_dict = {'discipline': num_disciplines, 'journey': num_journies, 'new_hire': num_new_hires,
+                      'core_project': num_overlap}
+
+        triad_score = self.scoring_function(score_dict)/self.perfect_score
+
+        return triad_score
+
+    def scoring_function(self, score_dict):
+        score_weights = self.score_weights
+
+        triad_score = 0
+        for key in score_dict:
+            score = score_dict[key]
+            weight = score_weights[key]
+
+            triad_score += weight*score
 
         return triad_score
 
@@ -226,17 +232,13 @@ if __name__ == '__main__':
 
     triads, scores = batch_generator.generate_batch()
 
-    print(triads[0])
-
     file_data = []
     for i in range(len(triads)):
-        # print(triads[i], scores[i])
-        # print(triads[i]['email_address'])
         emails = list(triads[i]['email_address'].values)
         file_data.append(emails)
 
     print(file_data)
-
-    suggested_triad_df = pd.DataFrame(file_data, columns=['person_1', 'person_2', 'person_3'])
+    col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
+    suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
     suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads.csv', index=False)
