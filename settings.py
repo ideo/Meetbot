@@ -20,7 +20,7 @@ max_meetings = 2
 new_hire_days = 180
 
 # scoring settings
-min_score = 0.8
+min_score = 0.9
 score_weights = {'discipline': 3, 'journey': 1, 'new_hire': 0,
                       'core_project': -2}
 # settings for ideal group
