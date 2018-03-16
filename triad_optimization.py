@@ -173,7 +173,7 @@ class BatchGenerator:
             combined_data.append(data)
 
         combined_data = pd.concat(combined_data)
-        combined_data.drop(['score'], axis = 1, inplace=True)
+        combined_data.drop(['score'], axis=1, inplace=True)
 
         combined_two_list = []
         for i in range(len(combined_data)):
@@ -185,7 +185,8 @@ class BatchGenerator:
         two_list = set(self.create_two_list_for_triad(triad.email_address.values))
         pair_intersection = two_list.intersection(combined_two_list)
 
-        print(pair_intersection)
+        # if len(pair_intersection) > 0:
+        #     print(pair_intersection)
 
         return len(pair_intersection) == 0
 
@@ -245,7 +246,12 @@ class BatchGenerator:
                 bl_check = self.check_bl(triad)
                 previous_pairing_check = self.check_previous_pairings(triad)
 
-                no_overlap = ~bl_check and ~previous_pairing_check
+                no_overlap = (bl_check) and (previous_pairing_check)
+
+                # print('pair check', previous_pairing_check)
+                # print('bl check', bl_check)
+                # print('no overlap', no_overlap)
+                # print(' ')
 
                 good_group = score_check and no_overlap
 
@@ -253,17 +259,16 @@ class BatchGenerator:
                     best_group = triad
                     high_score = group_score
 
-
-
                 iterations += 1
 
-            triad = best_group
-            group_score = high_score
-            batch_df.loc[
-                triad.index, 'number_of_meetings'] += 1
+            if len(best_group)>0:
+                triad = best_group
+                group_score = high_score
+                batch_df.loc[
+                    triad.index, 'number_of_meetings'] += 1
 
-            suggested_triads.append(triad[['first_name', 'discipline', 'Journey', 'email_address']])
-            scores.append(group_score)
+                suggested_triads.append(triad[['first_name', 'discipline', 'Journey', 'email_address']])
+                scores.append(group_score)
 
         return suggested_triads, scores
 
@@ -282,4 +287,4 @@ if __name__ == '__main__':
     col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
-    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_7.csv', index=False)
+    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_10.csv', index=False)
