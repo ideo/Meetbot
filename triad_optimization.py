@@ -240,7 +240,7 @@ class BatchGenerator:
 
             best_group = []
             high_score = -100
-            while (not good_group and iterations < 10):
+            while (not good_group and iterations < 100):
                 triad, batch_df = self.generate_single(batch_df)
                 score_check, group_score = self.check_score(triad)
                 bl_check = self.check_bl(triad)
@@ -287,4 +287,4 @@ if __name__ == '__main__':
     col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
-    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_10.csv', index=False)
+    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_11.csv', index=False)
