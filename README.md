@@ -4,14 +4,14 @@ This is a repo to automatically create lunch or coffee dates for IDEOers,
 because it's better for a computer to coordinate Google calendar schedules
 than a human.
 
-## 1. Initial setup + scrape Inside IDEO
-For this step, we borrowed heavily from [looking-in](https://github.com/ideo/looking-in/)!
+## 0. Initial setup
 
 Install your requirements in your preferred environment: `pip install -r requirements`
+Make a symlink to dropbox: `ln -sf ~/Dropbox\ \(IDEO\)/paired_lunch_data data`
 
-Make a symlink to dropbox: `ln -sf ~/Dropbox\ \(IDEO\)/looking-in-data dropbox`
-
-Update the `COOKIE` in `dropbox/settings.py` if it's been a few days.
+## 1. Scrape Inside IDEO 
+For this step, we borrowed heavily from [looking-in](https://github.com/ideo/looking-in/)!
+Update the `COOKIE` in `data/settings.py` if it's been a few days.
 
 How to get a `COOKIE`?
 * Go to any Inside IDEO project page, maybe https://inside.ideo.com/projects/21269
