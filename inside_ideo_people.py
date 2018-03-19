@@ -26,13 +26,13 @@ class LocationScrape:
 
         self.location_page_urls = self.get_multi_page_urls()  # the urls of all the location pages (multiple pages for lots of people)
         self.location_users = self.get_location_users()
-        self.combined_list = self.get_person_data()
+        self.combined_list, self.project_lists = self.get_person_data()
 
     def get_multi_page_urls(self):
         ''' Goes through pagination to get the urls for all the studio's people pages '''
         response = requests.get(self.location_url,
                                 headers=dropbox_settings.HEADERS,
-                                timeout=5,
+                                timeout=15,
                                 )
         soup = BeautifulSoup(response.text, "lxml")
         pagination_info = soup.find_all('div', {'class': ['pagination', 'bottom-pagination']})
@@ -40,18 +40,19 @@ class LocationScrape:
         studio_urls = []
         for div in pagination_info:
             pages = div.find_all('a')
-            print(pages)
+
             for page in pages:
                 url = page['href'].strip()
                 url = url.split('/')[-1].split('\\')[0]
                 studio_urls.append(url)
-                print('url ', url)
 
         return studio_urls
 
     def get_location_users(self):
         '''Gets all the people for this location'''
         target_urls = ['https://inside.ideo.com/users/' + page for page in self.location_page_urls]
+        target_urls.append(self.location_url)
+        target_urls = list(set(target_urls))
 
         location_users = []
 
@@ -86,7 +87,7 @@ class LocationScrape:
 
             response = requests.get(target_url,
                                     headers=dropbox_settings.HEADERS,
-                                    timeout=5,
+                                    timeout=15,
                                     )
             # turn content into a dictionary
 
@@ -107,7 +108,7 @@ class LocationScrape:
 
             response = requests.get(project_page_url,
                                     headers=dropbox_settings.HEADERS,
-                                    timeout=5,
+                                    timeout=15,
                                     )
 
             try:
@@ -158,119 +159,42 @@ class LocationScrape:
         return single_person_dict
 
 
+def save_data(project_lists, combined_list, data_path, location):
+    save_directory = os.path.join(data_path, location)
+    if not os.path.exists(save_directory):
+        os.mkdir(save_directory)
+    json_file = os.path.join(save_directory, 'project_json')
+    csv_path = os.path.join(save_directory, 'directory_data.csv')
+    with open(json_file, 'w') as fp:
+        json.dump(project_lists, fp)
+        print('saved file ', json_file)
+
+    people_info_df = pd.DataFrame(combined_list)
+    people_info_df.to_csv(csv_path, index=False)
+
+
 if __name__ == '__main__':
     sys.setrecursionlimit(3000)
 
-    # div class="pagination bottom-pagination" #TODO: incorporate pagination correctly. append the href here onto inside.ideo.com
+    # div class="pagination bottom-pagination" # TODO: incorporate pagination correctly. append the href here onto inside.ideo.com
 
-    base_urls = {'Chicago': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=3',
-                 'Cambridge': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=2',
-                 'London': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=4',
-                 'Munich': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=5',
-                 'New York': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=8',
-                 'Palo Alto': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=24',
+    base_urls = {# 'Chicago': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=3',
+                 # 'Cambridge': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=2',
+                 # 'London': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=4',
+                 # 'Munich': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=5',
+                 # 'New York': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=8',
+                 # 'Palo Alto': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=24',
                  'San Francisco': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=23',
                  'Shanghai': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=14',
                  'Tokyo': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=15',
                  'Global': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=9'}
 
-    chicago = LocationScrape(base_url_dict = base_urls, location_key ='Palo Alto')
+    # chicago = LocationScrape(base_url_dict = base_urls, location_key ='Palo Alto')
+
+    for location in base_urls:
+
+        print('scraping ', location)
+        data = LocationScrape(base_url_dict=base_urls, location_key=location)
+        save_data(data.project_lists, data.combined_list, settings.DATA_DIRECTORY, location)
 
 
-    # target_url = 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=3'
-    # base_url = 'https://inside.ideo.com/users/search?_=1519678038902&page={}&replace=false&sort=relevance&sort_dir=desc&sort_direction_name=desc&user_location_ids%5B%5D=3'
-    #
-    # for key in base_urls:
-    #     key = 'San Francisco'
-    #     base_url = base_urls[key]
-    #     print(base_url)
-    #     response = requests.get(base_url,
-    #                             headers=dropbox_settings.HEADERS,
-    #                             timeout=5,
-    #                             )
-    #
-    #     soup = BeautifulSoup(response.text, "lxml")
-    #     pagination_info = soup.find_all('div', {'class': ['pagination', 'bottom-pagination']})
-    #
-    #     studio_urls = []
-    #     for div in pagination_info:
-    #         pages = div.find_all('a')
-    #         for page in pages:
-    #             url = page['href'].strip()
-    #             url = url.split('/')[-1].split('\\')[0]
-    #             studio_urls.append(url)
-    #
-    # target_urls = [base_url.format(1), base_url.format(2)]
-    #
-    # people_urls = []
-    #
-    # for target_url in target_urls:
-    #     response = requests.get(target_url,
-    #                             headers=dropbox_settings.HEADERS,
-    #                             timeout=5,
-    #                             )
-    #     print('this is the response', response)
-    #
-    #     soup = BeautifulSoup(response.text, "lxml")
-    #
-    #     people_info = soup.find_all('a', {'class': ['\\"js-headshot-wrapper\\"']})
-    #
-    #     for div in people_info:
-    #         people_urls.append(div['href'].strip())
-    #
-    # combined_list = []
-    # project_lists = {}
-    # for url in people_urls:
-    #     url.replace('\\', '').strip()
-    #     user = url.split('/')[-1].split('\\')[0]
-    #     target_url = 'https://inside.ideo.com/users/' + user
-    #     print('this is the target url', target_url)
-    #
-    #     response = requests.get(target_url,
-    #                             headers=dropbox_settings.HEADERS,
-    #                             timeout=5,
-    #                             )
-    #     # turn content into a dictionary
-    #
-    #     person_info = json.loads(response.content)
-    #
-    #     # extract info that we want
-    #     single_person_dict = {}
-    #
-    #     for info_dict in person_info:
-    #         parser_response = parse_response(info_dict, keys_of_interest, single_person_dict)
-    #         if parser_response == AttributeError:
-    #             for info_list in info_dict:
-    #                 parse_response(info_list, keys_of_interest, single_person_dict)
-    #
-    #     # sys.exit()
-    #
-    #     project_page_url = 'https://inside.ideo.com/users/{}/get_my_work_projects'.format(user)
-    #
-    #     response = requests.get(project_page_url,
-    #                             headers=dropbox_settings.HEADERS,
-    #                             timeout=5,
-    #                             )
-    #
-    #     try:
-    #         project_jsons = response.json()['projects']['Core team']
-    #         project_id_list = []
-    #         project_name_list = []
-    #         projects = {}
-    #         for p_json in project_jsons:
-    #             project_id_list.append(p_json['id'])
-    #             project_name_list.append(p_json['name'])
-    #             projects[p_json['id']] = p_json['name']
-    #         project_lists[single_person_dict['email_address']] = project_id_list
-    #
-    #     except KeyError:
-    #         project_lists[single_person_dict['email_address']] = []
-    #
-    #     combined_list.append(single_person_dict)
-    #
-    # with open(settings.inside_ideo_json, 'w') as fp:
-    #     json.dump(project_lists, fp)
-    # print('saved file ', settings.inside_ideo_json)
-    #
-    # # people_info_df = pd.DataFrame(combined_list)
-    # # people_info_df.to_csv(settings.inside_ideo_csv, index=False)
