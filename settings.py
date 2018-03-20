@@ -28,7 +28,18 @@ ideal_group = {'discipline': 3, 'journey': 2, 'new_hire': 1,
                       'core_project': 0}
 
 # special settings
-
-number_of_meetings_dict = {'mandywong@ideo.com': 0, 'tlee@ideo.com': 0, 'dlee@ideo.com': 0, 'matthewgs@ideo.com': 0
-
+# Here you can force one person's weights to zero
+number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern? 
+                           'tlee@ideo.com': 0, # New parents!
+                           'dlee@ideo.com': 0, 
+                           'matthewgs@ideo.com': 0 # Matthew is on Inside IDEO twice
                            }
+
+# calendar settings
+event_duration = 80 # how long should the meeting last? (in minutes)
+earliest_time = 11 # when is the latest the meeting should begin? 
+latest_time = 15 # when is the latest the meeting should END?
+time_window = 30 # how many days out should we search for appropriate times?
+event_name = 'Meet n Three!' 
+event_description = 'Hello!\n\nSetting up time for you to grab lunch together! I tried finding enough time for you to get out of the studio and eat somewhere in the neighborhood.\n\nEveryone\'s calendars look open, but if you need to reschedule, please connect with each other to find a new day.  (If you have trouble finding time, I can help in a pinch.)\n\nDon\'t forget, the cost should be expensed to Chicago Talent in Concur.\n\nThanks!\nThis is a new test/self-serve.-BizBot'
+

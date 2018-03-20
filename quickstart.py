@@ -12,6 +12,8 @@ from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
 
+import settings 
+
 try:
     import argparse
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
@@ -24,159 +26,167 @@ SCOPES = 'https://www.googleapis.com/auth/calendar'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Google Calendar API Python Quickstart'
 
-def get_credentials():
-    """Gets valid user credentials from storage.
+class CalendarTool:
+    def __init__(self, calendar_settings):
+        self.event_duration = datetime.timedelta(minutes=calendar_settings.event_duration)
+        self.earliest_time = calendar_settings.earliest_time
+        self.latest_time = calendar_settings.latest_time
+        self.time_window = datetime.timedelta(days=calendar_settings.time_window)
+        self.event_name = calendar_settings.event_name
+        self.event_description = calendar_settings.event_description
 
-    If nothing has been stored, or if the stored credentials are invalid,
-    the OAuth2 flow is completed to obtain the new credentials.
+    def get_credentials(self):
+        """Gets valid user credentials from storage.
 
-    Returns:
-        Credentials, the obtained credential.
-    """
-    home_dir = os.path.expanduser('~')
-    credential_dir = os.path.join(home_dir, '.credentials')
-    print(credential_dir)
-    print(' ')
-    if not os.path.exists(credential_dir):
-        os.makedirs(credential_dir)
-    credential_path = os.path.join(credential_dir,
-                                   'calendar-python-quickstart.json')
+        If nothing has been stored, or if the stored credentials are invalid,
+        the OAuth2 flow is completed to obtain the new credentials.
 
-    store = Storage(credential_path)
-    credentials = store.get()
-    if not credentials or credentials.invalid:
-        flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
-        flow.user_agent = APPLICATION_NAME
-        if flags:
-            credentials = tools.run_flow(flow, store, flags)
-        else:  # Needed only for compatibility with Python 2.6
-            credentials = tools.run(flow, store)
-        print('Storing credentials to ' + credential_path)
-    return credentials
+        Returns:
+            Credentials, the obtained credential.
+        """
+        home_dir = os.path.expanduser('~')
+        credential_dir = os.path.join(home_dir, '.credentials')
+        print(credential_dir)
+        print(' ')
+        if not os.path.exists(credential_dir):
+            os.makedirs(credential_dir)
+        credential_path = os.path.join(credential_dir,
+                                       'calendar-python-quickstart.json')
 
-def slice(series, start, end, default=0):
+        store = Storage(credential_path)
+        credentials = store.get()
+        if not credentials or credentials.invalid:
+            flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
+            flow.user_agent = APPLICATION_NAME
+            if flags:
+                credentials = tools.run_flow(flow, store, flags)
+            else:  # Needed only for compatibility with Python 2.6
+                credentials = tools.run(flow, store)
+            print('Storing credentials to ' + credential_path)
+        return credentials
 
-    result = traces.TimeSeries(default=default)
+    def slice(self, series, start, end, default=0):
 
-    for t0, t1, value in series.iterperiods(start, end):
-        result[t0] = value
-    
-    result[t1] = series[t1]
-    return result
+        result = traces.TimeSeries(default=default)
 
-def interim_periods(series, increment=15):
-    """ Get incremented. Takes series (traces.TimeSeries), increment in 
-    number of minutes (integer). Returns a TimeSeries object with
-    timepoints for each of the periods and the value of the original 
-    TimeSeries at that point 
-    """
-    
-    result = traces.TimeSeries(default=series.default)
-    increment = datetime.timedelta(minutes=increment)
+        for t0, t1, value in series.iterperiods(start, end):
+            result[t0] = value
 
-    t1 = series.items()[1][0]
-    end = series.items()[-1][0]
+        result[t1] = series[t1]
+        return result
 
-    while t1 < end:
-        result[t1] = series[t1] 
-        t1 = (dateutil.parser.parse(t1) + increment).isoformat()
+    def interim_periods(self, series, increment=15):
+        """ Get incremented. Takes series (traces.TimeSeries), increment in
+        number of minutes (integer). Returns a TimeSeries object with
+        timepoints for each of the periods and the value of the original
+        TimeSeries at that point
+        """
 
-    result[end] = series[end] 
-    return result 
+        result = traces.TimeSeries(default=series.default)
+        increment = datetime.timedelta(minutes=increment)
 
-def check_interval(series, event_duration):
-    """Check if a TimeSeries is 0 for all subintervals within a given time window,
-    because being free at the beginning of the meeting != being free for the whole
-    meeting time.    
-    Arguments: `series` (a traces.TimeSeries object), event_duration (timedelta)
-    Returns a TimeSeries where the values represent the intervals starting at the 
-    measurement times, and the observations are the sum of all observations within
-    the intervals of length event_duration beginning at that time (so a person is 
-    free for the entire time window iff the observed value is 0).
-    """
+        t1 = series.items()[1][0]
+        end = series.items()[-1][0]
 
-    result = traces.TimeSeries(default=series.default)
+        while t1 < end:
+            result[t1] = series[t1]
+            t1 = (dateutil.parser.parse(t1) + increment).isoformat()
 
-    for t0 in series.items():
-        start = t0[0]
-        end = (dateutil.parser.parse(start) + event_duration).isoformat()
-        subseries = [i[1] for i in slice(series, start=start, end=end).items()]
-        result[start] = sum(subseries)
+        result[end] = series[end]
+        return result
 
-    return result 
+    def check_interval(self, series):
+        """Check if a TimeSeries is 0 for all subintervals within a given time window,
+        because being free at the beginning of the meeting != being free for the whole
+        meeting time.
+        Arguments: `series` (a traces.TimeSeries object), event_duration (timedelta)
+        Returns a TimeSeries where the values represent the intervals starting at the
+        measurement times, and the observations are the sum of all observations within
+        the intervals of length event_duration beginning at that time (so a person is
+        free for the entire time window iff the observed value is 0).
+        """
 
-def within_timebox(event_time, earliest_time, latest_time, event_duration):
-    start_time = dateutil.parser.parse(event_time).time() 
-    end_time = (dateutil.parser.parse(event_time) + event_duration).time()
-    return True if (start_time >= datetime.time(earliest_time) and end_time <= datetime.time(latest_time) and end_time >= datetime.time(earliest_time)) else False
+        result = traces.TimeSeries(default=series.default)
 
-def main():
-    
-    event_duration = datetime.timedelta(hours=1, minutes=20) # how long should lunch (or coffee) last?
-    earliest_time = 9 # in datetime "hours" (i.e. in range(24)) 
-    latest_time = 18 
-    time_window = datetime.timedelta(days=7) # number of days to look ahead for a potential window
-    triad = ['lnash@ideo.com', 'jzanzig@ideo.com', 'mmoliterno@ideo.com'] # TODO: unhardcode this :)
-    event_name = 'Test Event'
-    event_description = 'lorem ipsum'
+        for t0 in series.items():
+            start = t0[0]
+            end = (dateutil.parser.parse(start) + self.event_duration).isoformat()
+            subseries = [i[1] for i in self.slice(series, start=start, end=end).items()]
+            result[start] = sum(subseries)
 
-    credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http())
-    service = discovery.build('calendar', 'v3', http=http)
+        return result
 
-    now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
-    
-    # Got code to get freebusy times from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
-    body = {
-        "timeMin": now,
-        "timeMax": (datetime.datetime.utcnow() + time_window).isoformat() + 'Z',
-        "timeZone": 'US/Central',
-        "items": [{"id": email} for email in triad]
-    }
+    def within_timebox(self, event_time):
+        start_time = dateutil.parser.parse(event_time).time()
+        end_time = (dateutil.parser.parse(event_time) + self.event_duration).time()
+        return True if (start_time >= datetime.time(self.earliest_time) and \
+                        end_time <= datetime.time(self.latest_time) and \
+                        end_time >= datetime.time(self.earliest_time)) \
+            else False
 
-    eventsResult = service.freebusy().query(body=body).execute()
-    cal_dict = eventsResult[u'calendars']
-    
-    busy_times_list = []
-    for cal_name in cal_dict:
-        busy_times = traces.TimeSeries(default=0) # default is free (0) because we will add their busy times
-        for busy_window in cal_dict[cal_name]['busy']:
-            # add the start & end times of busy window
-            busy_times[busy_window['start']] = 1
-            busy_times[busy_window['end']] = 0
-        busy_times_list.append(busy_times)
+    def make_event(self):
 
-    # combine all of the calendars -- the times when the sum is 0 everyone is free
-    # thresholding finds all that are greater than 0, i.e. returns a boolean indicating when
-    # at least one group member is busy
-    combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
-    all_start_times = interim_periods(combined_free_times) # break out free times into 15-min intervals
-    all_intervals = check_interval(all_start_times, event_duration).to_bool(invert=True)
-    import pdb; pdb.set_trace()
-    eligible_times = [i[0] for i in all_intervals.items() if i[1] is True \
-                      and within_timebox(i[0], earliest_time, latest_time, event_duration)]
+        triad = ['lnash@ideo.com', 'jzanzig@ideo.com'] # TODO: unhardcode this :)
 
-    event_time = eligible_times[0] # for now, take first time that works. we can refine this 
-    
-    # now create an event on their calendars! 
-    event = {
-        'summary': event_name,
-        'description': event_description,
-        'start': {
-            'dateTime': event_time, 
+        credentials = self.get_credentials()
+        http = credentials.authorize(httplib2.Http())
+        service = discovery.build('calendar', 'v3', http=http)
 
-        },
-        'end': { 
-            'dateTime': (dateutil.parser.parse(event_time) + event_duration).isoformat(),
-            
-        },
- 
-        'attendees': [{"email": email} for email in triad],
+        now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
 
-    }
+        # Got code to get freebusy times from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
+        body = {
+            "timeMin": now,
+            "timeMax": (datetime.datetime.utcnow() + self.time_window).isoformat() + 'Z',
+            "timeZone": 'US/Central',
+            "items": [{"id": email} for email in triad]
+        }
 
-    event = service.events().insert(calendarId='primary', body=event, sendNotifications=True).execute()
-    print('Event created: %s' % (event.get('htmlLink')))
+        eventsResult = service.freebusy().query(body=body).execute()
+        cal_dict = eventsResult[u'calendars']
+
+        busy_times_list = []
+        for cal_name in cal_dict:
+            busy_times = traces.TimeSeries(default=0) # default is free (0) because we will add their busy times
+            for busy_window in cal_dict[cal_name]['busy']:
+                # add the start & end times of busy window
+                busy_times[busy_window['start']] = 1
+                busy_times[busy_window['end']] = 0
+            busy_times_list.append(busy_times)
+
+        # combine all of the calendars -- the times when the sum is 0 everyone is free
+        # thresholding finds all that are greater than 0, i.e. returns a boolean indicating when
+        # at least one group member is busy
+        combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
+        all_start_times = self.interim_periods(combined_free_times) # break out free times into 15-min intervals
+        all_intervals = self.check_interval(all_start_times).to_bool(invert=True)
+
+        eligible_times = [i[0] for i in all_intervals.items() if i[1] is True \
+                          and self.within_timebox(i[0])]
+
+        event_time = eligible_times[0] # for now, take first time that works. we can refine this
+
+        # now create an event on their calendars!
+        event = {
+            'summary': self.event_name,
+            'description': self.event_description,
+            'start': {
+                'dateTime': event_time,
+
+            },
+            'end': {
+                'dateTime': (dateutil.parser.parse(event_time) + self.event_duration).isoformat(),
+
+            },
+
+            'attendees': [{"email": email} for email in triad],
+
+        }
+
+        event = service.events().insert(calendarId='primary', body=event, sendNotifications=True).execute()
+        print('Event created: %s' % (event.get('htmlLink')))
     
 if __name__ == '__main__':
-    main()
+#    main()
+    calendar_tool = CalendarTool(settings)
+    calendar_tool.make_event()
