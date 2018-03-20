@@ -34,6 +34,7 @@ class CalendarTool:
         self.time_window = datetime.timedelta(days=calendar_settings.time_window)
         self.event_name = calendar_settings.event_name
         self.event_description = calendar_settings.event_description
+        self.triad = calendar_settings.triad
 
     def get_credentials(self):
         """Gets valid user credentials from storage.
@@ -124,9 +125,17 @@ class CalendarTool:
                         end_time >= datetime.time(self.earliest_time)) \
             else False
 
+    def weekend(self, event_time):
+        day_of_week = dateutil.parser.parse(event_time).weekday()
+        if day_of_week in (6,7):
+            return True
+        else:
+            return False
+
+
     def make_event(self):
 
-        triad = ['lnash@ideo.com', 'jzanzig@ideo.com'] # TODO: unhardcode this :)
+        #triad = ['lnash@ideo.com', 'jzanzig@ideo.com'] # TODO: unhardcode this :)
 
         credentials = self.get_credentials()
         http = credentials.authorize(httplib2.Http())
@@ -139,7 +148,7 @@ class CalendarTool:
             "timeMin": now,
             "timeMax": (datetime.datetime.utcnow() + self.time_window).isoformat() + 'Z',
             "timeZone": 'US/Central',
-            "items": [{"id": email} for email in triad]
+            "items": [{"id": email} for email in self.triad]
         }
 
         eventsResult = service.freebusy().query(body=body).execute()
@@ -162,10 +171,11 @@ class CalendarTool:
         all_intervals = self.check_interval(all_start_times).to_bool(invert=True)
 
         eligible_times = [i[0] for i in all_intervals.items() if i[1] is True \
-                          and self.within_timebox(i[0])]
+                          and self.within_timebox(i[0])\
+                          and not self.weekend(i[0])]
 
         event_time = eligible_times[0] # for now, take first time that works. we can refine this
-
+        import pdb; pdb.set_trace()
         # now create an event on their calendars!
         event = {
             'summary': self.event_name,
@@ -179,7 +189,7 @@ class CalendarTool:
 
             },
 
-            'attendees': [{"email": email} for email in triad],
+            'attendees': [{"email": email} for email in self.triad],
 
         }
 

@@ -30,9 +30,10 @@ ideal_group = {'discipline': 3, 'journey': 2, 'new_hire': 1,
 # special settings
 # Here you can force one person's weights to zero
 number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern? 
+                           'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
                            'tlee@ideo.com': 0, # New parents!
                            'dlee@ideo.com': 0, 
-                           'matthewgs@ideo.com': 0 # Matthew is on Inside IDEO twice
+                           'fgerlach@ideo.com': 0
                            }
 
 # calendar settings
@@ -41,5 +42,5 @@ earliest_time = 11 # when is the latest the meeting should begin?
 latest_time = 15 # when is the latest the meeting should END?
 time_window = 30 # how many days out should we search for appropriate times?
 event_name = 'Meet n Three!' 
-event_description = 'Hello!\n\nSetting up time for you to grab lunch together! I tried finding enough time for you to get out of the studio and eat somewhere in the neighborhood.\n\nEveryone\'s calendars look open, but if you need to reschedule, please connect with each other to find a new day.  (If you have trouble finding time, I can help in a pinch.)\n\nDon\'t forget, the cost should be expensed to Chicago Talent in Concur.\n\nThanks!\nThis is a new test/self-serve.-BizBot'
-
+event_description = 'Hello!\n\nSetting up time for you to grab lunch together! We tried to give you enough time to get out of the studio and eat somewhere in the neighborhood, but you can choose your own adventure! Here are <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">some suggestions</a>.\n\nEveryone\'s calendars look open, but if you need to reschedule, please connect with each other to find a new day. This is a test for D4AI -- it is self serve! \n\nDon\'t forget, the cost should be expensed to Chicago Talent in Concur.\n\nThanks!\n-BizBot'
+triad = ['jzanzig@ideo.com']
