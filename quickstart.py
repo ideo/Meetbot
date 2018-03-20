@@ -14,7 +14,6 @@ from oauth2client.file import Storage
 
 try:
     import argparse
-
     flags = argparse.ArgumentParser(parents=[tools.argparser]).parse_args()
 except ImportError:
     flags = None
@@ -67,7 +66,7 @@ def slice(series, start, end, default=0):
 
 def interim_periods(series, increment=15):
     """ Get incremented. Takes series (traces.TimeSeries), increment in 
-    number of minutes (integer). Results a traces.TimeSeries object with
+    number of minutes (integer). Returns a TimeSeries object with
     timepoints for each of the periods and the value of the original 
     TimeSeries at that point 
     """
@@ -75,7 +74,7 @@ def interim_periods(series, increment=15):
     result = traces.TimeSeries(default=series.default)
     increment = datetime.timedelta(minutes=increment)
 
-    t1 = series.items()[0][0]
+    t1 = series.items()[1][0]
     end = series.items()[-1][0]
 
     while t1 < end:
@@ -106,13 +105,18 @@ def check_interval(series, event_duration):
 
     return result 
 
+def within_timebox(event_time, earliest_time, latest_time, event_duration):
+    start_time = dateutil.parser.parse(event_time).time() 
+    end_time = (dateutil.parser.parse(event_time) + event_duration).time()
+    return True if (start_time >= datetime.time(earliest_time) and end_time <= datetime.time(latest_time) and end_time >= datetime.time(earliest_time)) else False
+
 def main():
     
     event_duration = datetime.timedelta(hours=1, minutes=20) # how long should lunch (or coffee) last?
     earliest_time = 9 # in datetime "hours" (i.e. in range(24)) 
     latest_time = 18 
     time_window = datetime.timedelta(days=7) # number of days to look ahead for a potential window
-    triad = ['lnash@ideo.com', 'jzanzig@ideo.com'] # TODO: unhardcode this :)
+    triad = ['lnash@ideo.com', 'jzanzig@ideo.com', 'mmoliterno@ideo.com'] # TODO: unhardcode this :)
     event_name = 'Test Event'
     event_description = 'lorem ipsum'
 
@@ -148,16 +152,13 @@ def main():
     combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
     all_start_times = interim_periods(combined_free_times) # break out free times into 15-min intervals
     all_intervals = check_interval(all_start_times, event_duration).to_bool(invert=True)
-    
-    eligible_times = [i[0] for i in all_intervals.items() if i[1] is True]
-    # TODO: bring back thresholding by hour of day! 
-#        if check_interval(combined_free_times, start=start, end=end) \
-#        and (start.hour > earliest_time) and (end.hour < latest_time): 
-#            eligible_times.append(start)
+    import pdb; pdb.set_trace()
+    eligible_times = [i[0] for i in all_intervals.items() if i[1] is True \
+                      and within_timebox(i[0], earliest_time, latest_time, event_duration)]
 
     event_time = eligible_times[0] # for now, take first time that works. we can refine this 
     
-    # now create an event on the calendar! 
+    # now create an event on their calendars! 
     event = {
         'summary': event_name,
         'description': event_description,
