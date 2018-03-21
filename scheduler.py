@@ -29,12 +29,14 @@ APPLICATION_NAME = 'Google Calendar API Python Quickstart'
 class CalendarTool:
     def __init__(self, calendar_settings):
         self.event_duration = datetime.timedelta(minutes=calendar_settings.event_duration)
+
         self.earliest_time = calendar_settings.earliest_time
         self.latest_time = calendar_settings.latest_time
+
         self.time_window = datetime.timedelta(days=calendar_settings.time_window)
+
         self.event_name = calendar_settings.event_name
         self.event_description = calendar_settings.event_description
-        self.triad = calendar_settings.triad
 
     def get_credentials(self):
         """Gets valid user credentials from storage.
@@ -47,8 +49,8 @@ class CalendarTool:
         """
         home_dir = os.path.expanduser('~')
         credential_dir = os.path.join(home_dir, '.credentials')
-        print(credential_dir)
-        print(' ')
+        #print(credential_dir)
+        #print(' ')
         if not os.path.exists(credential_dir):
             os.makedirs(credential_dir)
         credential_path = os.path.join(credential_dir,
@@ -67,7 +69,9 @@ class CalendarTool:
         return credentials
 
     def slice(self, series, start, end, default=0):
-
+        """Technically TimeSeries has a method for this, but it wasn't working and it
+        was easier to write something of my own than to try to fix that.
+        """
         result = traces.TimeSeries(default=default)
 
         for t0, t1, value in series.iterperiods(start, end):
@@ -77,10 +81,15 @@ class CalendarTool:
         return result
 
     def interim_periods(self, series, increment=15):
-        """ Get incremented. Takes series (traces.TimeSeries), increment in
-        number of minutes (integer). Returns a TimeSeries object with
-        timepoints for each of the periods and the value of the original
-        TimeSeries at that point
+        """ Get incremented.
+
+        Args:
+            series (traces.TimeSeries):
+            increment (int): Desired size of intervals
+
+        Returns:
+            traces.TimeSeries object with timepoints for each of the periods,
+            and the value of the *original* TimeSeries at that point
         """
 
         result = traces.TimeSeries(default=series.default)
@@ -96,7 +105,7 @@ class CalendarTool:
         result[end] = series[end]
         return result
 
-    def check_interval(self, series):
+    def entire_interval_free(self, series):
         """Check if a TimeSeries is 0 for all subintervals within a given time window,
         because being free at the beginning of the meeting != being free for the whole
         meeting time.
@@ -118,6 +127,15 @@ class CalendarTool:
         return result
 
     def within_timebox(self, event_time):
+        """Check if a time is within the appropriate parameters.
+
+        Args:
+            event_time (str): It might make more sense to have this be a datetime
+            object, but u gotta parse em sometime
+
+        Returns:
+            True if this event time is valid, otherwise false"""
+
         start_time = dateutil.parser.parse(event_time).time()
         end_time = (dateutil.parser.parse(event_time) + self.event_duration).time()
         return True if (start_time >= datetime.time(self.earliest_time) and \
@@ -125,7 +143,16 @@ class CalendarTool:
                         end_time >= datetime.time(self.earliest_time)) \
             else False
 
-    def weekend(self, event_time):
+    def is_weekend(self, event_time):
+        """
+        Is this day on a weekend? We can't send people invites for weekends!!!!
+
+        Args:
+            event_time (str)
+
+        Returns:
+            True if the day is a Saturday or Sunday, else False
+        """
         day_of_week = dateutil.parser.parse(event_time).weekday()
         if day_of_week in (6,7):
             return True
@@ -133,9 +160,7 @@ class CalendarTool:
             return False
 
 
-    def make_event(self):
-
-        #triad = ['lnash@ideo.com', 'jzanzig@ideo.com'] # TODO: unhardcode this :)
+    def make_event(self, triad):
 
         credentials = self.get_credentials()
         http = credentials.authorize(httplib2.Http())
@@ -143,12 +168,12 @@ class CalendarTool:
 
         now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
 
-        # Got code to get freebusy times from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
+        # Got freebusy code from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
         body = {
             "timeMin": now,
             "timeMax": (datetime.datetime.utcnow() + self.time_window).isoformat() + 'Z',
             "timeZone": 'US/Central',
-            "items": [{"id": email} for email in self.triad]
+            "items": [{"id": email} for email in triad]
         }
 
         eventsResult = service.freebusy().query(body=body).execute()
@@ -156,23 +181,22 @@ class CalendarTool:
 
         busy_times_list = []
         for cal_name in cal_dict:
-            busy_times = traces.TimeSeries(default=0) # default is free (0) because we will add their busy times
-            for busy_window in cal_dict[cal_name]['busy']:
-                # add the start & end times of busy window
+            busy_times = traces.TimeSeries(default=0) # default is free (0),
+            for busy_window in cal_dict[cal_name]['busy']: # manually add busy times
                 busy_times[busy_window['start']] = 1
                 busy_times[busy_window['end']] = 0
             busy_times_list.append(busy_times)
 
-        # combine all of the calendars -- the times when the sum is 0 everyone is free
-        # thresholding finds all that are greater than 0, i.e. returns a boolean indicating when
-        # at least one group member is busy
+        # combine all of the calendars to find when everyone is free
         combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
-        all_start_times = self.interim_periods(combined_free_times) # break out free times into 15-min intervals
-        all_intervals = self.check_interval(all_start_times).to_bool(invert=True)
+
+        all_start_times = self.interim_periods(combined_free_times)
+
+        all_intervals = self.entire_interval_free(all_start_times).to_bool(invert=True)
 
         eligible_times = [i[0] for i in all_intervals.items() if i[1] is True \
                           and self.within_timebox(i[0])\
-                          and not self.weekend(i[0])]
+                          and not self.is_weekend(i[0])]
 
         event_time = eligible_times[0] # for now, take first time that works. we can refine this
         import pdb; pdb.set_trace()
@@ -189,14 +213,24 @@ class CalendarTool:
 
             },
 
-            'attendees': [{"email": email} for email in self.triad],
+            'attendees': [{"email": email} for email in triad],
 
         }
 
-        event = service.events().insert(calendarId='primary', body=event, sendNotifications=True).execute()
+        event = service.events().insert(calendarId='primary',
+                                        body=event,
+                                        sendNotifications=True).execute()
+
         print('Event created: %s' % (event.get('htmlLink')))
     
 if __name__ == '__main__':
 #    main()
     calendar_tool = CalendarTool(settings)
-    calendar_tool.make_event()
+    suggested_triads = pd.read_csv(settings.suggested_triads,
+                                   usecols=[0,1,2])
+
+    #for triad in suggested_triads.values.tolist():
+        #calendar_tool.make_event(triad)
+
+    triad = ['jzanzig@ideo.com', 'lnash@ideo.com']
+    calendar_tool.make_event(triad)

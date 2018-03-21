@@ -6,6 +6,7 @@ inside_ideo_json = DATA_DIRECTORY + 'people_info.json' # this json has the proje
 inside_ideo_csv = DATA_DIRECTORY + 'people_info.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
 chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
+suggested_triads = DATA_DIRECTORY + 'suggested_triads_2.csv'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'
@@ -21,18 +22,25 @@ new_hire_days = 180
 
 # scoring settings
 min_score = 0.9
-score_weights = {'discipline': 3, 'journey': 1, 'new_hire': 0,
-                      'core_project': -2}
+score_weights = {'discipline': 3,
+                 'journey': 1,
+                 'new_hire': 0,
+                 'core_project': -2}
+
 # settings for ideal group
-ideal_group = {'discipline': 3, 'journey': 2, 'new_hire': 1,
-                      'core_project': 0}
+ideal_group = {'discipline': 3,
+               'journey': 2,
+               'new_hire': 1,
+               'core_project': 0}
 
 # special settings
 # Here you can force one person's weights to zero
 number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern? 
                            'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
+
                            'tlee@ideo.com': 0, # New parents!
-                           'dlee@ideo.com': 0, 
+                           'dlee@ideo.com': 0,
+
                            'fgerlach@ideo.com': 0
                            }
 
@@ -42,5 +50,17 @@ earliest_time = 11 # when is the latest the meeting should begin?
 latest_time = 15 # when is the latest the meeting should END?
 time_window = 30 # how many days out should we search for appropriate times?
 event_name = 'Meet n Three!' 
-event_description = 'Hello!\n\nSetting up time for you to grab lunch together! We tried to give you enough time to get out of the studio and eat somewhere in the neighborhood, but you can choose your own adventure! Here are <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">some suggestions</a>.\n\nEveryone\'s calendars look open, but if you need to reschedule, please connect with each other to find a new day. This is a test for D4AI -- it is self serve! \n\nDon\'t forget, the cost should be expensed to Chicago Talent in Concur.\n\nThanks!\n-BizBot'
-triad = ['jzanzig@ideo.com']
+event_description = """Hello!
+
+Setting up time for you to grab lunch together! 
+We tried to give you enough time to get out of the studio and eat somewhere in the neighborhood, but you can choose your own adventure! 
+Here are <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">some suggestions</a>.
+
+Everyone\'s calendars look open, but if you need to reschedule, please connect with each other to find a new day. 
+This is a test for D4AI -- it is self serve!
+
+Don\'t forget, the cost should be expensed to Chicago Talent in Concur.
+
+Thanks!
+-BizBot"""
+
