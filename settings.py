@@ -53,14 +53,14 @@ event_name = 'Meet n Three!'
 event_description = """Hello!
 
 Setting up time for you to grab lunch together! 
-We tried to give you enough time to get out of the studio and eat somewhere in the neighborhood, but you can choose your own adventure! 
-Here are <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">some suggestions</a>.
+We chose a time that looked open on everyone's calendars, but this is a trial. 
+If this time doesn't work for you, please coordinate with each other to find a new day!
+(TODO: explicitly call out what to do if people can't or don't want to participate??) 
 
-Everyone\'s calendars look open, but if you need to reschedule, please connect with each other to find a new day. 
-This is a test for D4AI -- it is self serve!
+We tried to give you enough time to get out of the studio and eat somewhere in the neighborhood.
+Here are <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">some suggestions</a>, 
+or you can choose your own adventure!
+The budget is ~$20/person. Please expense the cost to Chicago Talent in Concur.
 
-Don\'t forget, the cost should be expensed to Chicago Talent in Concur.
-
-Thanks!
--BizBot"""
+Thanks!"""
 
