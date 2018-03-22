@@ -198,9 +198,15 @@ class CalendarTool:
                           and self.within_timebox(i[0])\
                           and not self.is_weekend(i[0])]
 
-        event_time = eligible_times[0] # for now, take first time that works. we can refine this
+        if not eligible_times:
+            print('There are no available times for that group in that time range.\n')
+            return
+        else:
+            event_time = eligible_times[0] # for now, take first time that works. we can refine
+
         import pdb; pdb.set_trace()
-        # now create an event on their calendars!
+
+        # now create an event and put it on their calendars!
         event = {
             'summary': self.event_name,
             'description': self.event_description,
@@ -232,5 +238,5 @@ if __name__ == '__main__':
     #for triad in suggested_triads.values.tolist():
         #calendar_tool.make_event(triad)
 
-    triad = ['jzanzig@ideo.com', 'lnash@ideo.com']
+    triad = ['jzanzig@ideo.com', 'bwells@ideo.com', 'aferrara@ideo.com']
     calendar_tool.make_event(triad)
