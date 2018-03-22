@@ -199,7 +199,7 @@ class CalendarTool:
                           and not self.is_weekend(i[0])]
 
         if not eligible_times:
-            print('There are no available times for that group in that time range.\n')
+            print('There are no available times for that group in that time range.', triad, '\n')
             return
         else:
             event_time = eligible_times[0] # for now, take first time that works. we can refine
@@ -233,10 +233,7 @@ if __name__ == '__main__':
 #    main()
     calendar_tool = CalendarTool(settings)
     suggested_triads = pd.read_csv(settings.suggested_triads,
-                                   usecols=[0,1,2])
+                                   usecols=[0,1,2]) #TOOD: handle different length input than 3
 
-    #for triad in suggested_triads.values.tolist():
-        #calendar_tool.make_event(triad)
-
-    triad = ['jzanzig@ideo.com', 'bwells@ideo.com', 'aferrara@ideo.com']
-    calendar_tool.make_event(triad)
+    for triad in suggested_triads.values.tolist():
+        calendar_tool.make_event(triad)
