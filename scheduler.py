@@ -160,7 +160,7 @@ class CalendarTool:
             return False
 
 
-    def make_event(self, triad):
+    def get_time(self, triad):
 
         credentials = self.get_credentials()
         http = credentials.authorize(httplib2.Http())
@@ -204,6 +204,11 @@ class CalendarTool:
         else:
             event_time = eligible_times[0] # for now, take first time that works. we can refine
 
+            print(event_time)
+
+        return event_time
+
+    def make_event(self, triad, event_time):
         import pdb; pdb.set_trace()
 
         # now create an event and put it on their calendars!
@@ -228,6 +233,8 @@ class CalendarTool:
                                         sendNotifications=True).execute()
 
         print('Event created: %s' % (event.get('htmlLink')))
+
+        return
     
 if __name__ == '__main__':
 #    main()
@@ -236,4 +243,6 @@ if __name__ == '__main__':
                                    usecols=[0,1,2]) #TOOD: handle different length input than 3
 
     for triad in suggested_triads.values.tolist():
-        calendar_tool.make_event(triad)
+        print(triad)
+        event_time = calendar_tool.get_time(triad)
+        #calendar_tool.make_event(triad, event_time)
