@@ -154,7 +154,7 @@ class CalendarTool:
             True if the day is a Saturday or Sunday, else False
         """
         day_of_week = dateutil.parser.parse(event_time).weekday()
-        if day_of_week in (6,7):
+        if day_of_week in (5,6):
             return True
         else:
             return False
@@ -199,7 +199,7 @@ class CalendarTool:
                           and not self.is_weekend(i[0])]
 
         if not eligible_times:
-            print('There are no available times for that group in that time range.', triad, '\n')
+            print('There are no available times for that group in that time range.')
             return
         else:
             event_time = eligible_times[0] # for now, take first time that works. we can refine
@@ -209,7 +209,10 @@ class CalendarTool:
         return event_time
 
     def make_event(self, triad, event_time):
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
+        credentials = self.get_credentials()
+        http = credentials.authorize(httplib2.Http())
+        service = discovery.build('calendar', 'v3', http=http)
 
         # now create an event and put it on their calendars!
         event = {
@@ -224,13 +227,14 @@ class CalendarTool:
 
             },
 
-            'attendees': [{"email": email} for email in triad],
+            'attendees': [{"email": email} for email in triad]
 
         }
 
         event = service.events().insert(calendarId='primary',
                                         body=event,
-                                        sendNotifications=True).execute()
+                                        sendNotifications=True,
+                                        guestsCanModify=True).execute()
 
         print('Event created: %s' % (event.get('htmlLink')))
 
