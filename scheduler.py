@@ -37,7 +37,7 @@ class CalendarTool:
 
         self.event_name = calendar_settings.event_name
         self.event_description = calendar_settings.event_description
-
+  
     def get_credentials(self):
         """Gets valid user credentials from storage.
 
@@ -146,6 +146,7 @@ class CalendarTool:
     def is_weekend(self, event_time):
         """
         Is this day on a weekend? We can't send people invites for weekends!!!!
+        Or Mondays!!! (MLM) 
 
         Args:
             event_time (str)
@@ -154,7 +155,7 @@ class CalendarTool:
             True if the day is a Saturday or Sunday, else False
         """
         day_of_week = dateutil.parser.parse(event_time).weekday()
-        if day_of_week in (5,6):
+        if day_of_week in (0,5,6):
             return True
         else:
             return False
@@ -165,7 +166,7 @@ class CalendarTool:
         credentials = self.get_credentials()
         http = credentials.authorize(httplib2.Http())
         service = discovery.build('calendar', 'v3', http=http)
-
+        
         now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
 
         # Got freebusy code from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
@@ -209,7 +210,6 @@ class CalendarTool:
         return event_time
 
     def make_event(self, triad, event_time):
-        #import pdb; pdb.set_trace()
         credentials = self.get_credentials()
         http = credentials.authorize(httplib2.Http())
         service = discovery.build('calendar', 'v3', http=http)
@@ -227,14 +227,16 @@ class CalendarTool:
 
             },
 
-            'attendees': [{"email": email} for email in triad]
+            'attendees': [{"email": email} for email in triad],
+            'guestsCanModify': True,
+            'visibility': "public"
 
         }
 
         event = service.events().insert(calendarId='primary',
                                         body=event,
                                         sendNotifications=True,
-                                        guestsCanModify=True).execute()
+                                        ).execute()
 
         print('Event created: %s' % (event.get('htmlLink')))
 
@@ -244,9 +246,10 @@ if __name__ == '__main__':
 #    main()
     calendar_tool = CalendarTool(settings)
     suggested_triads = pd.read_csv(settings.suggested_triads,
-                                   usecols=[0,1,2]) #TOOD: handle different length input than 3
+                                   usecols=[0,1,2]) #TODO: handle different length input than 3
 
     for triad in suggested_triads.values.tolist():
         print(triad)
         event_time = calendar_tool.get_time(triad)
-        #calendar_tool.make_event(triad, event_time)
+        #print(event_time)
+        calendar_tool.make_event(triad, event_time)
