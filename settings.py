@@ -6,8 +6,8 @@ inside_ideo_json = DATA_DIRECTORY + 'people_info.json' # this json has the proje
 inside_ideo_csv = DATA_DIRECTORY + 'people_info.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
 chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
-#suggested_triads = DATA_DIRECTORY + 'suggested_triads_test.csv'
-suggested_triads = 'suggested_triads_test.csv'
+suggested_triads = DATA_DIRECTORY + 'suggested_triads_June_1.csv'
+#suggested_triads = 'suggested_triads_test.csv'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'
@@ -38,18 +38,16 @@ ideal_group = {'discipline': 3,
 # Here you can force one person's weights to zero
 number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern? 
                            'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
-
-                           'tlee@ideo.com': 0, # New parents!
                            'dlee@ideo.com': 0,
-
                            'fgerlach@ideo.com': 0, # Out of studio
                            'gwinther@ideo.com': 0,
                            'isirer@ideo.com': 0,
-                           'loui@ideo.com': 0
+                           'loui@ideo.com': 0,
+                           'gmitchell@ideo.com': 0
                            }
 
 # calendar settings
-event_duration = 80 # how long should the meeting last? (in minutes)
+event_duration = 60 # how long should the meeting last? (in minutes)
 earliest_time = 12 # when is the latest the meeting should begin?
 latest_time = 14 # when is the latest the meeting should END?
 time_window = 30 # how many days out should we search for appropriate times?
@@ -66,4 +64,4 @@ Please stick to a budget of about $20/person and expense the cost to Chicago Tal
 
 Happy FaceSlacking!"""
 
-# TODO: try adding attachment
+
