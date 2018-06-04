@@ -44,12 +44,13 @@ number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
                            'isirer@ideo.com': 0,
                            'loui@ideo.com': 0,
                            'gmitchell@ideo.com': 0
+                           'bsyverson@ideo.com': 0
                            }
 
 # calendar settings
 event_duration = 60 # how long should the meeting last? (in minutes)
 earliest_time = 12 # when is the latest the meeting should begin?
-latest_time = 14 # when is the latest the meeting should END?
+latest_time = 13 # when is the latest the meeting should END?
 time_window = 30 # how many days out should we search for appropriate times?
 event_name = 'Meet n\' Three!'
 event_description = """Hello! Meaty the Meetbot here, inviting you all to go out to lunch. This time looked open on 
