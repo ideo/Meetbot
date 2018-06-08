@@ -39,7 +39,7 @@ class BatchGenerator:
         try:
             weight = df_to_sample['max_meetings'] - df_to_sample['number_of_meetings']
             output = df_to_sample.sample(number_to_sample,
-                                         weights=weight ** 6)
+                                         weights=weight ** 8)
         except ValueError:
             output = df_to_sample
         return output
@@ -88,7 +88,9 @@ class BatchGenerator:
             num_disciplines = num_disciplines - 1
 
         # convert journies to numbers
-        journey_number = {'Individual': 1,
+        journey_number = {'Intern':0,
+                          '(Temp)':0,
+                          'Individual': 1,
                           'Team': 2,
                           'Director': 3,
                           'Enterprise': 3}
@@ -287,4 +289,4 @@ if __name__ == '__main__':
     col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
-    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_11.csv', index=False)
+    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_June_2.csv', index=False)

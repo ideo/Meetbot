@@ -1,9 +1,9 @@
 import os
 
-DATA_DIRECTORY = './data/'
+DATA_DIRECTORY = './data/Chicago/'
 
-inside_ideo_json = DATA_DIRECTORY + 'people_info.json' # this json has the project lists
-inside_ideo_csv = DATA_DIRECTORY + 'people_info.csv'
+inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the project lists
+inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
 chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
 #suggested_triads = DATA_DIRECTORY + 'suggested_triads_test.csv'
@@ -30,7 +30,7 @@ score_weights = {'discipline': 3,
 
 # settings for ideal group
 ideal_group = {'discipline': 3,
-               'journey': 2,
+               'journey': 3,
                'new_hire': 1,
                'core_project': 0}
 
@@ -39,8 +39,8 @@ ideal_group = {'discipline': 3,
 number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern? 
                            'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
 
-                           'tlee@ideo.com': 0, # New parents!
-                           'dlee@ideo.com': 0,
+
+                           'dlee@ideo.com': 0,# New parents!
 
                            'fgerlach@ideo.com': 0, # Out of studio
                            'gwinther@ideo.com': 0,

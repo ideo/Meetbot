@@ -7,7 +7,7 @@ import requests
 import socket
 import sys
 from bs4 import BeautifulSoup
-from dropbox import settings as dropbox_settings
+from data import settings as dropbox_settings
 from tqdm import *
 
 import settings
@@ -34,6 +34,8 @@ class LocationScrape:
                                 headers=dropbox_settings.HEADERS,
                                 timeout=15,
                                 )
+        print('response ', response)
+        print('this is the cookie', dropbox_settings.HEADERS['Cookie'])
         soup = BeautifulSoup(response.text, "lxml")
         pagination_info = soup.find_all('div', {'class': ['pagination', 'bottom-pagination']})
 
@@ -45,7 +47,7 @@ class LocationScrape:
                 url = page['href'].strip()
                 url = url.split('/')[-1].split('\\')[0]
                 studio_urls.append(url)
-
+        print('studio_urls ', studio_urls)
         return studio_urls
 
     def get_location_users(self):
@@ -178,16 +180,16 @@ if __name__ == '__main__':
 
     # div class="pagination bottom-pagination" # TODO: incorporate pagination correctly. append the href here onto inside.ideo.com
 
-    base_urls = {# 'Chicago': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=3',
+    base_urls = {'Chicago': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=3'}
                  # 'Cambridge': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=2',
                  # 'London': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=4',
                  # 'Munich': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=5',
                  # 'New York': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=8',
                  # 'Palo Alto': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=24',
-                 'San Francisco': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=23',
-                 'Shanghai': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=14',
-                 'Tokyo': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=15',
-                 'Global': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=9'}
+                # 'San Francisco': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=23',
+                # 'Shanghai': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=14',
+                # 'Tokyo': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=15',
+                # 'Global': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=9'}
 
     # chicago = LocationScrape(base_url_dict = base_urls, location_key ='Palo Alto')
 
