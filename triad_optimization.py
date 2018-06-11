@@ -1,9 +1,9 @@
 import glob
 import json
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
-import sys
-from datetime import datetime, timedelta
 
 import settings
 
@@ -34,7 +34,7 @@ class BatchGenerator:
         self.score_weights = batch_settings.score_weights
         self.perfect_score = self.scoring_function(batch_settings.ideal_group)
 
-    def sample_df(self, df_to_sample, number_to_sample):
+    def sample_df(self, df_to_sample, number_to_sample):  # base class
 
         try:
             weight = df_to_sample['max_meetings'] - df_to_sample['number_of_meetings']
@@ -44,7 +44,7 @@ class BatchGenerator:
             output = df_to_sample
         return output
 
-    def recode_disciplines(self):
+    def recode_disciplines(self):  # paired lunch specific
         # recodes support disicplines
         support_discipline_list = [{'discipline': {'Talent': 'Support'}},
                                    {'discipline': {'Marketing': 'Support'}},
@@ -60,7 +60,7 @@ class BatchGenerator:
 
         return recoded_df
 
-    def calculate_triad_score(self, triad):
+    def calculate_triad_score(self, triad):  # paired lunch specific
 
         combined = self.combined
         triad_data = combined[combined['email_address'].isin(triad.email_address)]
@@ -88,8 +88,8 @@ class BatchGenerator:
             num_disciplines = num_disciplines - 1
 
         # convert journies to numbers
-        journey_number = {'Intern':0,
-                          '(Temp)':0,
+        journey_number = {'Intern': 0,
+                          '(Temp)': 0,
                           'Individual': 1,
                           'Team': 2,
                           'Director': 3,
@@ -114,7 +114,7 @@ class BatchGenerator:
 
         return triad_score
 
-    def scoring_function(self, score_dict):
+    def scoring_function(self, score_dict):  # base class
         score_weights = self.score_weights
 
         triad_score = 0
@@ -126,7 +126,7 @@ class BatchGenerator:
 
         return triad_score
 
-    def generate_single(self, people_info_df, default_member=None):
+    def generate_single(self, people_info_df, default_member=None):  # split into part base class/other maybe
         min_disciplines = self.min_disciplines
         new_hire_days = self.new_hire_days
         number_in_group = self.number_in_group
@@ -161,7 +161,7 @@ class BatchGenerator:
 
         return triad, people_info_df
 
-    def check_score(self, triad):
+    def check_score(self, triad):  # paired lunch
         score = self.calculate_triad_score(triad)
         bl_check = self.check_bl(triad)
 
@@ -192,7 +192,7 @@ class BatchGenerator:
 
         return len(pair_intersection) == 0
 
-    def create_two_list_for_triad(self, email_ad):
+    def create_two_list_for_triad(self, email_ad):  # base class
         two_list = []
         for i in range(len(email_ad)):
             pairs = [frozenset([email_ad[i], email_ad[j]]) for j in range(i + 1, len(email_ad))]
@@ -200,7 +200,7 @@ class BatchGenerator:
 
         return two_list
 
-    def check_bl(self, triad):
+    def check_bl(self, triad):  # paired lunch
         # make pairs from triad
 
         email_ad = triad.email_address.values
@@ -216,7 +216,7 @@ class BatchGenerator:
 
         return len(BL_intersection) == 0
 
-    def generate_batch(self):
+    def generate_batch(self):  # paired lunch
         batch_df = self.combined.copy()
         batch_df['tenure'] = datetime.now() - batch_df['hired_at']
         batch_df['number_of_meetings'] = 0
@@ -263,7 +263,7 @@ class BatchGenerator:
 
                 iterations += 1
 
-            if len(best_group)>0:
+            if len(best_group) > 0:
                 triad = best_group
                 group_score = high_score
                 batch_df.loc[
