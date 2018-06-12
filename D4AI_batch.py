@@ -12,9 +12,8 @@ class D4AIBatchGenerator:
         self.D4AI_list['number_of_meetings'] = 0
         self.D4AI_list['max_meetings'] = batch_settings.max_meetings
 
-
         self.hours_diff = pd.read_csv(batch_settings.time_zome_csv)
-        self.good_groups = self.possible_studio_trios_based_on_time(8, 18)
+        self.good_groups = self.possible_studio_trios_based_on_time(9, 18)
 
     def possible_studio_trios_based_on_time(self, start_time, end_time):
         possible_groups = []
@@ -38,6 +37,7 @@ class D4AIBatchGenerator:
                 actual_groups.append(group)
 
         # all possible combinations of 3 studios
+        # could also find the combinations of the possible groups
         studios = set(self.D4AI_list['Studio'].values)
         comb = set(combinations(studios, 3))
         good_groups = []
@@ -66,7 +66,7 @@ class D4AIBatchGenerator:
                                         'number_of_meetings'] == 0].Studio.value_counts() / D4AI_list.Studio.value_counts()
         percentage_zero.fillna(0, inplace=True)
 
-        percentage_max = D4AI_list[D4AI_list['number_of_meetings'] ==D4AI_list[
+        percentage_max = D4AI_list[D4AI_list['number_of_meetings'] == D4AI_list[
             'max_meetings']].Studio.value_counts() / D4AI_list.Studio.value_counts()
         percentage_max.fillna(0, inplace=True)
 
@@ -117,12 +117,18 @@ class D4AIBatchGenerator:
         while (sum(self.D4AI_list.number_of_meetings < 1) > 0):
             selection_email = self.generate_single()
 
-
             self.D4AI_list.loc[
                 selection_email, 'number_of_meetings'] += 1
             selected.append(selection_email)
 
         return selected
+
+
+def save_list(file_data, output_filename, settings):
+    col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
+    suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
+    suggested_triad_df.to_csv(settings.save_directory + output_filename, index=False)
+
 
 if __name__ == '__main__':
     batch_generator = D4AIBatchGenerator(D4AI_settings)
@@ -132,19 +138,27 @@ if __name__ == '__main__':
     emails_all = []
     studios_all = []
     names_all = []
+    readable_all = []
     for row in trios:
         emails = []
         studios = []
-        names =[]
+        names = []
+        readable = []
         for index in row:
             person = batch_generator.D4AI_list.iloc[index]
             emails.append(person.Email)
             studios.append(person.Studio)
             names.append(person.Name)
+            readable.append(person.Name + '-' + person.Studio)
         emails_all.append(emails)
         studios_all.append(studios)
         names_all.append(names)
+        readable_all.append(readable)
 
     print(emails_all)
     print(studios_all)
     print(names_all)
+    print(readable_all)
+
+    save_list(readable_all, 'readable_list.csv', D4AI_settings)
+    save_list(studios_all, 'studio_list.csv', D4AI_settings)
