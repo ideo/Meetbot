@@ -114,14 +114,34 @@ class D4AIBatchGenerator:
 
     def generate_batch(self):
         selected = []
+
         while (sum(self.D4AI_list.number_of_meetings < 1) > 0):
-            selection_email = self.generate_single()
+            group_check = False
+            while not group_check:
+                selection_email = self.generate_single()
+                group_check = self.check_previous_batches(selection_email, selected)
 
             self.D4AI_list.loc[
                 selection_email, 'number_of_meetings'] += 1
             selected.append(selection_email)
 
+
         return selected
+
+    def check_previous_batches(self, trio, selected):
+        # get combinations in trio
+        comb_trio = set(combinations(trio, 2))
+
+        # flatten the selected list
+        selected_flat = [item for sublist in selected for item in list(sublist)]
+
+        # combinations
+        comb_selected = set(combinations(selected_flat, 2))
+
+        # now see if there is anything in the intersection
+        intersect = comb_selected.intersection(comb_trio)
+
+        return len(intersect) == 0
 
 
 def save_list(file_data, output_filename, settings):
