@@ -38,7 +38,8 @@ class D4AIBatchGenerator:
             comb_bool = [sub for sub in comb if set(sub).issubset(working_studios_set)]
             if len(comb_bool) > 0:
                 for c in comb_bool:
-                    string = c[0] + '_' + c[1] + '_' + c[2]
+                    string = convert_to_studio_key(c)
+                    print('string ', string)
                     if string in stored_dict:
                         time_list = stored_dict[string]
                         time_list.append(i)
@@ -135,7 +136,6 @@ class D4AIBatchGenerator:
                 selection_email, 'number_of_meetings'] += 1
             selected.append(selection_email)
 
-
         return selected
 
     def check_previous_batches(self, trio, selected):
@@ -154,11 +154,20 @@ class D4AIBatchGenerator:
         return len(intersect) == 0
 
 
-def save_list(file_data, output_filename, settings):
-    col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
+def save_list(file_data, output_filename, settings, last_as_person = True):
+    if last_as_person:
+        col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
+    else:
+        col_names = ['person_{}'.format(i) for i in range(len(file_data[0])-1)]
+        col_names.append('studios_key')
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df.to_csv(settings.save_directory + output_filename, index=False)
 
+def convert_to_studio_key(trio_studios):
+    trio_studios = sorted(list(trio_studios))
+    string = trio_studios[0] + '_' + trio_studios[1] + '_' + trio_studios[2]
+
+    return string
 
 if __name__ == '__main__':
     batch_generator = D4AIBatchGenerator(D4AI_settings)
@@ -169,6 +178,7 @@ if __name__ == '__main__':
     studios_all = []
     names_all = []
     readable_all = []
+
     for row in trios:
         emails = []
         studios = []
@@ -180,6 +190,7 @@ if __name__ == '__main__':
             studios.append(person.Studio)
             names.append(person.Name)
             readable.append(person.Name + '-' + person.Studio)
+        emails.append(convert_to_studio_key(studios))
         emails_all.append(emails)
         studios_all.append(studios)
         names_all.append(names)
