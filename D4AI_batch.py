@@ -2,6 +2,7 @@ from itertools import combinations
 
 import numpy as np
 import pandas as pd
+import json
 
 import D4AI_settings
 
@@ -9,43 +10,52 @@ import D4AI_settings
 class D4AIBatchGenerator:
     def __init__(self, batch_settings):
         self.D4AI_list = pd.read_excel(batch_settings.D4AI_excel)
+        self.save_directory = batch_settings.save_directory
         self.D4AI_list['number_of_meetings'] = 0
         self.D4AI_list['max_meetings'] = batch_settings.max_meetings
+        self.min_overlap = batch_settings.min_overlap
 
         self.hours_diff = pd.read_csv(batch_settings.time_zome_csv)
-        self.good_groups = self.possible_studio_trios_based_on_time(9, 18)
+        self.good_groups = self.possible_studio_trios_based_on_time(8, 18)
+
 
     def possible_studio_trios_based_on_time(self, start_time, end_time):
-        possible_groups = []
 
-        full_df = []
+        studios = set(self.D4AI_list['Studio'].values)
+        comb = set(combinations(studios, 3))
 
-        for i in range(24):  # 24 for 24 hours
+
+        stored_dict = {}
+        for i in range(24):
             times = (self.hours_diff['hours_diff'] + i) % 24
 
             # get the ones that are within working hours
-            working_hours_bool = (times > start_time) & (times < end_time)
+            working_hours_bool = (times > 8) & (times < 18)
             working_studios = self.hours_diff[working_hours_bool]
             working_studios['time'] = times[working_hours_bool]
-            possible_groups.append(frozenset(working_studios['Studio']))
-            full_df.append(working_studios)
 
-        studio_pairings = set(possible_groups)
-        actual_groups = []
-        for group in studio_pairings:
-            if len(group) > 2:
-                actual_groups.append(group)
+            working_studios_set = set(working_studios.Studio.values)
+            comb_bool = [sub for sub in comb if set(sub).issubset(working_studios_set)]
+            if len(comb_bool) > 0:
+                for c in comb_bool:
+                    string = c[0] + '_' + c[1] + '_' + c[2]
+                    if string in stored_dict:
+                        time_list = stored_dict[string]
+                        time_list.append(i)
+                        stored_dict[string] = time_list
+                    else:
+                        stored_dict[string] = [i]
 
-        # all possible combinations of 3 studios
-        # could also find the combinations of the possible groups
-        studios = set(self.D4AI_list['Studio'].values)
-        comb = set(combinations(studios, 3))
+        with open(self.save_directory + '/overlapping_times.json', 'w') as fp:
+            json.dump(stored_dict, fp)
+
         good_groups = []
-        for entry in comb:
-            entry = frozenset(entry)
-            for group in actual_groups:
-                if entry.issubset(group):
-                    good_groups.append(entry)
+        for string in stored_dict:
+            studios = string.split('_')
+            times = stored_dict[string]
+            # print(studios)
+            if len(times) >= self.min_overlap:
+                good_groups.append(frozenset(studios))
         good_groups = set(good_groups)
 
         return good_groups
@@ -175,10 +185,6 @@ if __name__ == '__main__':
         names_all.append(names)
         readable_all.append(readable)
 
-    print(emails_all)
-    print(studios_all)
-    print(names_all)
-    print(readable_all)
-
     save_list(readable_all, 'readable_list.csv', D4AI_settings)
     save_list(studios_all, 'studio_list.csv', D4AI_settings)
+    save_list(emails_all, 'email_list.csv', D4AI_settings)
