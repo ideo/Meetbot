@@ -3,6 +3,7 @@ from __future__ import print_function
 import datetime
 import dateutil.parser
 import httplib2
+import json
 import os
 import pandas as pd 
 import traces
@@ -160,6 +161,20 @@ class CalendarTool:
         else:
             return False
 
+    def time_overlap(self, studio_trio):
+        """
+        Given a trio of studio names (e.g. London_Munich_Shanghai), 
+        finds the appropriate minimum and maximum times (in CST)
+        for a global d4AI call (using the lookup overlapping_times.json)
+        """
+        with open('overlapping_times.json') as data_file:
+            times = json.load(data_file)
+
+        interval_starts = times[studio_trio] 
+        min_time = interval_starts[0]
+        max_time = interval_starts[-1] + 1        
+        return(min_time, max_time)
+
 
     def get_time(self, triad):
 
@@ -208,6 +223,7 @@ class CalendarTool:
             print(event_time)
 
         return event_time
+
 
     def make_event(self, triad, event_time):
         credentials = self.get_credentials()
