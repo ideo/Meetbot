@@ -127,7 +127,7 @@ class CalendarTool:
 
         return result
 
-    def within_timebox(self, event_time):
+    def within_timebox(self, event_time, studios=None):
         """Check if a time is within the appropriate parameters.
 
         Args:
@@ -139,9 +139,13 @@ class CalendarTool:
 
         start_time = dateutil.parser.parse(event_time).time()
         end_time = (dateutil.parser.parse(event_time) + self.event_duration).time()
-        return True if (start_time >= datetime.time(self.earliest_time) and \
-                        end_time <= datetime.time(self.latest_time) and \
-                        end_time >= datetime.time(self.earliest_time)) \
+        # override the earliest & latest times for D4AI calls
+        # since they are coming from 3 different studios
+        earliest_time, latest_time = self.time_overlap(studios)
+       
+        return True if (start_time >= datetime.time(earliest_time) and \
+                        end_time <= datetime.time(latest_time) and \
+                        end_time >= datetime.time(earliest_time)) \
             else False
 
     def is_weekend(self, event_time):
@@ -176,7 +180,7 @@ class CalendarTool:
         return(min_time, max_time)
 
 
-    def get_time(self, triad):
+    def get_time(self, triad, studios):
 
         credentials = self.get_credentials()
         http = credentials.authorize(httplib2.Http())
@@ -211,7 +215,7 @@ class CalendarTool:
         all_intervals = self.entire_interval_free(all_start_times).to_bool(invert=True)
 
         eligible_times = [i[0] for i in all_intervals.items() if i[1] is True \
-                          and self.within_timebox(i[0])\
+                          and self.within_timebox(i[0], studios)\
                           and not self.is_weekend(i[0])]
 
         if not eligible_times:
@@ -262,10 +266,11 @@ if __name__ == '__main__':
 #    main()
     calendar_tool = CalendarTool(settings)
     suggested_triads = pd.read_csv(settings.suggested_triads,
-                                   usecols=[0,1,2]) #TODO: handle different length input than 3
+                                   usecols=[0,1,2,3]) # get 3rd column for studios 
 
     for triad in suggested_triads.values.tolist():
-        print(triad)
-        event_time = calendar_tool.get_time(triad)
+        group = triad[0:3]
+        print(group)
+        event_time = calendar_tool.get_time(group, studios=triad[-1])
         #print(event_time)
-        calendar_tool.make_event(triad, event_time)
+        #calendar_tool.make_event(group, event_time)
