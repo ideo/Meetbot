@@ -30,9 +30,9 @@ APPLICATION_NAME = 'Google Calendar API Python Quickstart'
 class CalendarTool:
     def __init__(self, calendar_settings):
         self.event_duration = datetime.timedelta(minutes=calendar_settings.event_duration)
-
-        self.earliest_time = calendar_settings.earliest_time
-        self.latest_time = calendar_settings.latest_time
+        # Don't need earliest and latest time settings (they're based on the three studios' overlap)
+        #self.earliest_time = calendar_settings.earliest_time
+        #self.latest_time = calendar_settings.latest_time
 
         self.time_window = datetime.timedelta(days=calendar_settings.time_window)
 
@@ -206,9 +206,13 @@ class CalendarTool:
                 busy_times[busy_window['start']] = 1
                 busy_times[busy_window['end']] = 0
             busy_times_list.append(busy_times)
-
+      
         # combine all of the calendars to find when everyone is free
-        combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
+        try: 
+            combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
+        except ValueError:
+            print('One of the time series is empty. One of the emails is most likely wrong.')
+            return
 
         all_start_times = self.interim_periods(combined_free_times)
 
@@ -270,7 +274,7 @@ if __name__ == '__main__':
 
     for triad in suggested_triads.values.tolist():
         group = triad[0:3]
-        print(group)
+        group = [name.strip(' ') for name in group] # hack to remove spaces for now -- TODO do this better :)
+        print(triad)
         event_time = calendar_tool.get_time(group, studios=triad[-1])
-        #print(event_time)
         #calendar_tool.make_event(group, event_time)
