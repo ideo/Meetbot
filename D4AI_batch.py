@@ -1,8 +1,8 @@
+import json
 from itertools import combinations
 
 import numpy as np
 import pandas as pd
-import json
 
 import D4AI_settings
 
@@ -18,12 +18,10 @@ class D4AIBatchGenerator:
         self.hours_diff = pd.read_csv(batch_settings.time_zome_csv)
         self.good_groups = self.possible_studio_trios_based_on_time(8, 18)
 
-
     def possible_studio_trios_based_on_time(self, start_time, end_time):
 
         studios = set(self.D4AI_list['Studio'].values)
         comb = set(combinations(studios, 3))
-
 
         stored_dict = {}
         for i in range(24):
@@ -39,7 +37,7 @@ class D4AIBatchGenerator:
             if len(comb_bool) > 0:
                 for c in comb_bool:
                     string = convert_to_studio_key(c)
-                    print('string ', string)
+
                     if string in stored_dict:
                         time_list = stored_dict[string]
                         time_list.append(i)
@@ -61,9 +59,10 @@ class D4AIBatchGenerator:
 
         return good_groups
 
-    def sample_df_meetings(self, df_to_sample, number_to_sample, exp=8):
+    def sample_df_meetings(self, df_to_sample, number_to_sample, exp=5):
 
         weight = df_to_sample['max_meetings'] - df_to_sample['number_of_meetings']
+        weight = weight.clip(0, max(weight))
         output = df_to_sample.sample(number_to_sample,
                                      weights=weight ** exp)
         return output
@@ -81,62 +80,134 @@ class D4AIBatchGenerator:
             'max_meetings']].Studio.value_counts() / D4AI_list.Studio.value_counts()
         percentage_max.fillna(0, inplace=True)
 
+        individual_studios = []
+        maxed_count = 0
         for studio in trio:
             p_zero = percentage_zero.loc[studio]  # percentage people with zero meetings
             if percentage_max[studio] >= 1:
-                maxed = 0
+                maxed_count += 1
+                if maxed_count >-2:
+                    maxed = 0.00
+                else:
+                    maxed = 0.05
             total_weight += p_zero
+            individual_studios.append(maxed)
 
-        return total_weight * maxed
+        return total_weight*maxed, individual_studios
 
     def find_possible_studios(self, non_leads, selection_studio, good_groups):
         possibilities = []
         weights = []
+        ind = []
         for group in good_groups:
 
             if selection_studio in group:
                 possibilities.append(group)
-                weights.append(100 * self.find_weight_for_studio_trio(group, non_leads))
+                weight, individual_studios = self.find_weight_for_studio_trio(group, non_leads)
+                weights.append(100 * weight)
+                ind.append(individual_studios)
 
         weights = np.array(weights)
-        return possibilities, weights
+        return possibilities, weights, ind
 
     def generate_single(self):
-        non_leads = self.D4AI_list[(self.D4AI_list['Call Lead'] != 'x')]
+
         leads = self.D4AI_list[(self.D4AI_list['Call Lead'] == 'x')]
         weights = [0, 0]
-
+        count = 0
         while (sum(weights) == 0):  # get the lead and make sure they can lead a call in a group of 3 that needs a call
-            selection = self.sample_df_meetings(leads, 1, exp=15)
+
+            # first select someone (it doesn't have to be a lead)
+            selection = self.sample_df_meetings(self.D4AI_list, 1, exp=5)
 
             selection_studio = selection.Studio.values[0]
             selection_email = [selection.index[0]]
+            selection_is_lead = selection['Call Lead'].values[0] == 'x'
 
-            possibilities, weights = self.find_possible_studios(non_leads, selection_studio, self.good_groups)
+            possibilities, weights, studio_sc = self.find_possible_studios(self.D4AI_list, selection_studio, self.good_groups)
+            count += 1
 
-        studio_group = pd.DataFrame({'col': possibilities}).sample(weights=weights ** 10).values[0][0]
-        other_studios = set(studio_group) - set([selection_studio])
 
-        for studio in other_studios:
-            people = non_leads[non_leads.Studio == studio]
-            selection = self.sample_df_meetings(people, 1, exp=15)
-            selection_email.append(selection.index[0])
+        possible_df = pd.DataFrame({'col': possibilities, 'col2':studio_sc})
+
+        selected_group = possible_df.sample(weights=(weights) ** 10).values
+        studio_group = selected_group[0][0]
+        studio_w = selected_group[0][1]
+
+        other_studios = list(set(studio_group))  # - set([selection_studio]))
+
+        # if selection is not a lead, you need to select a lead
+
+        # select two distinct people from the other studios
+        add_to_group = []
+        other_studio_df = pd.DataFrame({'col': other_studios, 'col2':studio_w})
+
+        other_studio_df['num_meetings'] = 0
+        other_studio_df['max_meetings'] = 2
+        other_studio_df.loc[other_studio_df.col == selection_studio, 'num_meetings'] = 1
+        count == 0
+        while len(add_to_group) < 2:
+            # if selection is not a lead, you need to select a lead
+
+            studio_weights = (other_studio_df['max_meetings'] - other_studio_df['num_meetings']) * (
+            other_studio_df['col2'] - 0.05)
+
+            studio = other_studio_df.sample(weights=studio_weights ** 5).values[0][0]
+            if (not selection_is_lead):
+
+                mask = (leads.Studio == studio)
+                people = leads[mask]
+                try:
+                    selection = self.sample_df_meetings(people, 1, exp=8)
+                except ValueError: # the leads all have max calls
+                    selection = people.sample(1)
+                selection_is_lead = True
+
+            else:
+                mask = (self.D4AI_list.Studio == studio)
+                people = self.D4AI_list[mask]
+
+                selection = self.sample_df_meetings(people, 1, exp=8)
+
+            if selection.Email.values[0] not in add_to_group: # will always be added if i == 0
+                selection_email.append(selection.index[0])
+                add_to_group.append(selection.Email.values[0])
+                other_studio_df.loc[other_studio_df.col == studio, 'num_meetings'] += 1
+                count += 1
         return selection_email
 
     def generate_batch(self):
         selected = []
-
-        while (sum(self.D4AI_list.number_of_meetings < 1) > 0):
+        group_count = 0
+        self.D4AI_list.loc[self.D4AI_list.Name == 'pam', 'max_meetings'] = 2
+        while (sum(self.D4AI_list[self.D4AI_list.Name != 'pam'].number_of_meetings < 1) > 0):
             group_check = False
             while not group_check:
                 selection_email = self.generate_single()
-                group_check = self.check_previous_batches(selection_email, selected)
+                if len(selection_email) > 1:
+                    group_check = self.check_previous_batches(selection_email, selected)
+                else:
+                    break
 
-            self.D4AI_list.loc[
-                selection_email, 'number_of_meetings'] += 1
-            selected.append(selection_email)
+            if selection_email != 'exit':
+                score = self.calculate_trio_score(selection_email)
+
+                if score >= 2:
+                    group_count += 1
+                    self.D4AI_list.loc[
+                        selection_email, 'number_of_meetings'] += 1
+                    selected.append(selection_email)
+            else:
+                print('breaking while loop anyway')
+                break;
 
         return selected
+
+    def calculate_trio_score(self, trio):
+        studios = set(self.D4AI_list.loc[
+            trio, 'Studio'].values)
+        return len(studios)
+
 
     def check_previous_batches(self, trio, selected):
         # get combinations in trio
@@ -154,20 +225,22 @@ class D4AIBatchGenerator:
         return len(intersect) == 0
 
 
-def save_list(file_data, output_filename, settings, last_as_person = True):
+def save_list(file_data, output_filename, settings, last_as_person=True):
     if last_as_person:
         col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
     else:
-        col_names = ['person_{}'.format(i) for i in range(len(file_data[0])-1)]
+        col_names = ['person_{}'.format(i) for i in range(len(file_data[0]) - 1)]
         col_names.append('studios_key')
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df.to_csv(settings.save_directory + output_filename, index=False)
+
 
 def convert_to_studio_key(trio_studios):
     trio_studios = sorted(list(trio_studios))
     string = trio_studios[0] + '_' + trio_studios[1] + '_' + trio_studios[2]
 
     return string
+
 
 if __name__ == '__main__':
     batch_generator = D4AIBatchGenerator(D4AI_settings)
@@ -199,3 +272,5 @@ if __name__ == '__main__':
     save_list(readable_all, 'readable_list.csv', D4AI_settings)
     save_list(studios_all, 'studio_list.csv', D4AI_settings)
     save_list(emails_all, 'email_list.csv', D4AI_settings)
+
+    (batch_generator.D4AI_list).to_csv('number_of_meetings.csv')
