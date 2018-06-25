@@ -6,7 +6,7 @@ inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the proj
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
 chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
-suggested_triads = DATA_DIRECTORY + 'suggested_triads_June_1.csv'
+suggested_triads = DATA_DIRECTORY + 'suggested_triads_July.csv'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'
@@ -47,6 +47,8 @@ number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
                            'lnash@ideo.com': 0,
                            'rcranfill@ideo.com': 0,
                            'dvondle@ideo.com': 0,
+                           'dlewis@ideo.com': 0,
+                           'dogan@ideo.com': 0,
                            }
 
 # calendar settings
