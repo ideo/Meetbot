@@ -1,11 +1,11 @@
 import os
 
-DATA_DIRECTORY = './data/Chicago/'
+DATA_DIRECTORY = './data/Palo Alto/'
 
 inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the project lists
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
-chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
+chideo_directory = DATA_DIRECTORY + 'PA_directory.csv'
 suggested_triads = DATA_DIRECTORY + 'suggested_triads_July.csv'
 
 # where to save the groups
@@ -35,20 +35,7 @@ ideal_group = {'discipline': 3,
 
 # special settings
 # Here you can force one person's weights to zero
-number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
-                           'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
-                           'dlee@ideo.com': 0,
-                           'fgerlach@ideo.com': 0, # Out of studio
-                           'gwinther@ideo.com': 0,
-                           'isirer@ideo.com': 0,
-                           'loui@ideo.com': 0,
-                           'gmitchell@ideo.com': 0,
-                           'bsyverson@ideo.com': 0,
-                           'lnash@ideo.com': 0,
-                           'rcranfill@ideo.com': 0,
-                           'dvondle@ideo.com': 0,
-                           'dlewis@ideo.com': 0,
-                           'dogan@ideo.com': 0,
+number_of_meetings_dict = {
                            }
 
 # calendar settings
