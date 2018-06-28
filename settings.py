@@ -5,7 +5,7 @@ DATA_DIRECTORY = './data/Palo Alto/'
 inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the project lists
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
-chideo_directory = DATA_DIRECTORY + 'PA_directory.csv'
+pa_directory = DATA_DIRECTORY + 'PA_directory.csv'
 suggested_triads = DATA_DIRECTORY + 'suggested_triads_July.csv'
 
 # where to save the groups
