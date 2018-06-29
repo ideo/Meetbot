@@ -5,7 +5,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-import settings
+import PA_settings as settings
 
 
 class BatchGenerator:
@@ -88,14 +88,15 @@ class BatchGenerator:
             num_disciplines = num_disciplines - 1
 
         # convert journies to numbers
-        journey_number = {'Intern': 0,
+        journey_number = {'nan':0,
+                          'Intern': 0,
                           '(Temp)': 0,
                           'Individual': 1,
                           'Team': 2,
                           'Director': 3,
                           'Enterprise': 3}
 
-        triad_journies = np.array([journey_number[i] for i in triad_data.Journey])
+        triad_journies = np.array([journey_number[str(i)] for i in triad_data.Journey])
 
         if len(triad_journies[triad_journies >= 3]) > 1:
             sub = 4
@@ -218,6 +219,8 @@ class BatchGenerator:
 
     def generate_batch(self):  # paired lunch
         batch_df = self.combined.copy()
+        print('combined length is ', len(batch_df))
+
         batch_df['tenure'] = datetime.now() - batch_df['hired_at']
         batch_df['number_of_meetings'] = 0
         batch_df['max_meetings'] = 2  # default max_meetings is 2
@@ -272,13 +275,13 @@ class BatchGenerator:
                 suggested_triads.append(triad[['first_name', 'discipline', 'Journey', 'email_address']])
                 scores.append(group_score)
 
-        return suggested_triads, scores
+        return suggested_triads, scores, batch_df
 
 
 if __name__ == '__main__':
     batch_generator = BatchGenerator(settings)
 
-    triads, scores = batch_generator.generate_batch()
+    triads, scores, batch_df = batch_generator.generate_batch()
 
     file_data = []
     for i in range(len(triads)):
@@ -289,4 +292,7 @@ if __name__ == '__main__':
     col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
-    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_July_4.csv', index=False)
+
+    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_June_2.csv', index=False)
+
+    batch_df.to_csv(settings.save_directory + 'batch_df.csv')

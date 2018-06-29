@@ -86,14 +86,14 @@ class D4AIBatchGenerator:
             p_zero = percentage_zero.loc[studio]  # percentage people with zero meetings
             if percentage_max[studio] >= 1:
                 maxed_count += 1
-                if maxed_count >-2:
+                if maxed_count > -2:
                     maxed = 0.00
                 else:
                     maxed = 0.05
             total_weight += p_zero
             individual_studios.append(maxed)
 
-        return total_weight*maxed, individual_studios
+        return total_weight * maxed, individual_studios
 
     def find_possible_studios(self, non_leads, selection_studio, good_groups):
         possibilities = []
@@ -124,11 +124,11 @@ class D4AIBatchGenerator:
             selection_email = [selection.index[0]]
             selection_is_lead = selection['Call Lead'].values[0] == 'x'
 
-            possibilities, weights, studio_sc = self.find_possible_studios(self.D4AI_list, selection_studio, self.good_groups)
+            possibilities, weights, studio_sc = self.find_possible_studios(self.D4AI_list, selection_studio,
+                                                                           self.good_groups)
             count += 1
-
-
-        possible_df = pd.DataFrame({'col': possibilities, 'col2':studio_sc})
+        print('selection is ', selection)
+        possible_df = pd.DataFrame({'col': possibilities, 'col2': studio_sc})
 
         selected_group = possible_df.sample(weights=(weights) ** 10).values
         studio_group = selected_group[0][0]
@@ -140,7 +140,7 @@ class D4AIBatchGenerator:
 
         # select two distinct people from the other studios
         add_to_group = []
-        other_studio_df = pd.DataFrame({'col': other_studios, 'col2':studio_w})
+        other_studio_df = pd.DataFrame({'col': other_studios, 'col2': studio_w})
 
         other_studio_df['num_meetings'] = 0
         other_studio_df['max_meetings'] = 2
@@ -149,27 +149,34 @@ class D4AIBatchGenerator:
         while len(add_to_group) < 2:
             # if selection is not a lead, you need to select a lead
 
-            studio_weights = (other_studio_df['max_meetings'] - other_studio_df['num_meetings']) * (
-            other_studio_df['col2'] - 0.05)
 
-            studio = other_studio_df.sample(weights=studio_weights ** 5).values[0][0]
             if (not selection_is_lead):
-
-                mask = (leads.Studio == studio)
-                people = leads[mask]
+                people = []
+                while len(people)==0:
+                    studio_weights = (other_studio_df['max_meetings'] - other_studio_df['num_meetings']) * (
+                        other_studio_df['col2'] - 0.05)
+                    studio = other_studio_df.sample(weights=studio_weights ** 5).values[0][0]
+                    mask = (leads.Studio == studio)
+                    people = leads[mask]
                 try:
-                    selection = self.sample_df_meetings(people, 1, exp=8)
-                except ValueError: # the leads all have max calls
+                    selection = self.sample_df_meetings(people, 1, exp=10)
+                except ValueError:  # the leads all have max calls
+                    print('people are ', people)
                     selection = people.sample(1)
                 selection_is_lead = True
 
             else:
+                studio_weights = (other_studio_df['max_meetings'] - other_studio_df['num_meetings']) * (
+                    other_studio_df['col2'] - 0.05)
+
+                studio = other_studio_df.sample(weights=studio_weights ** 5).values[0][0]
+
                 mask = (self.D4AI_list.Studio == studio)
                 people = self.D4AI_list[mask]
 
-                selection = self.sample_df_meetings(people, 1, exp=8)
+                selection = self.sample_df_meetings(people, 1, exp=10)
 
-            if selection.Email.values[0] not in add_to_group: # will always be added if i == 0
+            if selection.Email.values[0] not in add_to_group:  # will always be added if i == 0
                 selection_email.append(selection.index[0])
                 add_to_group.append(selection.Email.values[0])
                 other_studio_df.loc[other_studio_df.col == studio, 'num_meetings'] += 1
@@ -205,9 +212,8 @@ class D4AIBatchGenerator:
 
     def calculate_trio_score(self, trio):
         studios = set(self.D4AI_list.loc[
-            trio, 'Studio'].values)
+                          trio, 'Studio'].values)
         return len(studios)
-
 
     def check_previous_batches(self, trio, selected):
         # get combinations in trio
