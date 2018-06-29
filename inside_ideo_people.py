@@ -185,7 +185,7 @@ if __name__ == '__main__':
                  # 'London': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=4',
                  # 'Munich': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=5',
                  # 'New York': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=8',
-                 # 'Palo Alto': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=24',
+                 # 'Palo Alto': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=24'}
                 # 'San Francisco': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=23',
                 # 'Shanghai': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=14',
                 # 'Tokyo': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=15',
