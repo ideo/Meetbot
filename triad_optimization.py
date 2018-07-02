@@ -5,7 +5,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-import PA_settings as settings
+import settings
 
 
 class BatchGenerator:
@@ -293,6 +293,6 @@ if __name__ == '__main__':
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
 
-    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_June_2.csv', index=False)
+    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_July.csv', index=False)
 
     batch_df.to_csv(settings.save_directory + 'batch_df.csv')

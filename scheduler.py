@@ -251,4 +251,4 @@ if __name__ == '__main__':
     for triad in suggested_triads.values.tolist():
         print(triad)
         event_time = calendar_tool.get_time(triad)
-        #calendar_tool.make_event(triad, event_time)
+        calendar_tool.make_event(triad, event_time)
