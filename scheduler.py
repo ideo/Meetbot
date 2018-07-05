@@ -270,11 +270,12 @@ if __name__ == '__main__':
 #    main()
     calendar_tool = CalendarTool(settings)
     suggested_triads = pd.read_csv(settings.suggested_triads,
-                                   usecols=[0,1,2,3]) # get 3rd column for studios 
+                                   usecols=[0,1,2,3,4]) 
 
     for triad in suggested_triads.values.tolist():
-        group = triad[0:3]
+        group = triad[0:4]
         group = [name.strip(' ') for name in group] # hack to remove spaces for now -- TODO do this better :)
         print(triad)
-        event_time = calendar_tool.get_time(group, studios=triad[-1])
-        #calendar_tool.make_event(group, event_time)
+        event_time = calendar_tool.get_time(group, 
+                                            studios=triad[-1])
+        calendar_tool.make_event(group, event_time)
