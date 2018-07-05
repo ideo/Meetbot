@@ -251,7 +251,7 @@ if __name__ == '__main__':
     calendar_tool = CalendarTool(settings)
     suggested_triads = pd.read_csv(settings.suggested_triads,
                                    usecols=[0,1,2]) #TODO: handle different length input than 3
-
+    
     for triad in suggested_triads.values.tolist():
         print(triad)
         event_time = calendar_tool.get_time(triad)
