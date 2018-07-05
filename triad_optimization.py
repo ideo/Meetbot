@@ -19,7 +19,8 @@ class BatchGenerator:
                                      encoding="ISO-8859-1")
         self.directory.rename(columns={'IDEO Journey:  Level': 'Journey',
                                        }, inplace=True)
-        print(self.directory.head())
+        self.directory.Journey.fillna('Individual', inplace=True)
+        
         with open(batch_settings.inside_ideo_json) as json_data:
             self.project_lists = json.load(json_data)
 
@@ -96,7 +97,8 @@ class BatchGenerator:
                           'Individual': 1,
                           'Team': 2,
                           'Director': 3,
-                          'Enterprise': 3}
+                          'Enterprise': 3,
+                          }
 
         triad_journies = np.array([journey_number[i] for i in triad_data.Journey])
 
