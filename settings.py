@@ -35,8 +35,7 @@ ideal_group = {'discipline': 3,
 
 # special settings
 # Here you can force one person's weights to zero
-number_of_meetings_dict = {
-                           }
+number_of_meetings_dict = {'rlockwood@ideo.com': 0, 'fazimpour@ideo.com': 0, 'rerlich@ideo.com': 0, 'sseira@ideo.com': 0, 'stang@ideo.com': 0, 'ssalazar@ideo.com': 0, 'terlin@ideo.com': 0, 'vpho@ideo.com': 0, 'aevans@ideo.com': 0, 'cmoore@ideo.com': 0, 'dkelley@ideo.com': 0, 'ecornell@ideo.com': 0, 'jimy@ideo.com': 0, 'kschnippering@ideo.com': 0, 'lhantover@ideo.com': 0 }
 
 # calendar settings
 event_duration = 60 # how long should the meeting last? (in minutes)
