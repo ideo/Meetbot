@@ -1,7 +1,7 @@
 import os
 
 DATA_DIRECTORY = './data/D4AI_global/call_lists/'
-suggested_triads = DATA_DIRECTORY + 'test_foursomes.csv'
+suggested_triads = DATA_DIRECTORY + 'email_list.csv'
 
 # calendar settings
 event_duration = 45 # how long should the meeting last? (in minutes)
@@ -9,7 +9,7 @@ time_window = 60 # how many days out should we search for appropriate times?
 event_name = 'D4AI Global Update Call!'
 event_description = """Hi D4AI Insiders, 
 
-Meaty the Meetbot here, inviting you all to join a call with two other IDEOers to chat about D4AI. I was designed by [Jane](https://inside.ideo.com/users/jzanzig) and [Lisa](https://inside.ideo.com/users/lnash), Data Scientists in Chicago, to help create groups and find time on calendars.
+Meaty the Meetbot here, inviting you all to join a call with two other IDEOers to chat about D4AI. I was designed by <a href=https://inside.ideo.com/users/jzanzig>Jane</a> and <a href=https://inside.ideo.com/users/lnash>Lisa</a>, Data Scientists in Chicago, to help create groups and find time on calendars.
 
 I’m helping people in the D4AI community make connections and share inspiration through low key conversations in small groups. Since the three of you have been closer to D4AI over the past year, we’ve found a time for you to learn and share with each other about what’s going on with D4AI across IDEO. 
 
