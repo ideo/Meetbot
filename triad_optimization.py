@@ -17,12 +17,15 @@ class BatchGenerator:
 
         self.directory = pd.read_csv(batch_settings.studio_directory, #parse_dates=['Anniversary'],
                                      encoding="ISO-8859-1")
+        self.directory.rename(columns={'IDEO Journey:  Level': 'Journey',
+                                       }, inplace=True)
+        print(self.directory.head())
         with open(batch_settings.inside_ideo_json) as json_data:
             self.project_lists = json.load(json_data)
 
-        self.combined = self.people_info_df.merge(self.directory, left_on='email_address', right_on='Email')
+        self.combined = self.people_info_df.merge(self.directory, left_on='email_address', right_on='work_email')
         self.combined = self.combined[
-            ['first_name', 'email_address', 'Journey', 'discipline', 'Anniversary', 'hired_at']]
+            ['first_name', 'email_address', 'Journey', 'discipline', 'hired_at']]
 
         self.number_in_group = batch_settings.number_in_group
         self.min_disciplines = batch_settings.min_disciplines
