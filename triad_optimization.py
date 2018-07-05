@@ -15,7 +15,7 @@ class BatchGenerator:
         self.BL_list = pd.read_csv(batch_settings.bl_list_csv)
         self.pairing_files = glob.glob(batch_settings.save_directory + '*.csv')
 
-        self.directory = pd.read_csv(batch_settings.chideo_directory, parse_dates=['Anniversary'],
+        self.directory = pd.read_csv(batch_settings.studio_directory, #parse_dates=['Anniversary'],
                                      encoding="ISO-8859-1")
         with open(batch_settings.inside_ideo_json) as json_data:
             self.project_lists = json.load(json_data)
