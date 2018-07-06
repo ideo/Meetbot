@@ -5,7 +5,7 @@ suggested_triads = DATA_DIRECTORY + 'email_list.csv'
 
 # calendar settings
 event_duration = 45 # how long should the meeting last? (in minutes)
-time_window = 60 # how many days out should we search for appropriate times?
+time_window = 90 # how many days out should we search for appropriate times?
 event_name = 'D4AI Global Update Call!'
 event_description = """Hi D4AI Insiders, 
 
