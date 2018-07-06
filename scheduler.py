@@ -180,17 +180,17 @@ class CalendarTool:
         return(min_time, max_time)
 
 
-    def get_time(self, triad, studios):
+    def get_time(self, triad, studios, min_lead_days=2):
 
         credentials = self.get_credentials()
         http = credentials.authorize(httplib2.Http())
         service = discovery.build('calendar', 'v3', http=http)
         
-        now = datetime.datetime.utcnow().isoformat() + 'Z'  # 'Z' indicates UTC time
+        now = (datetime.datetime.utcnow() + datetime.timedelta(days=min_lead_days)).isoformat() + 'Z'  # 'Z' indicates UTC time
 
         # Got freebusy code from https://gist.github.com/cwurld/9b4e10dbeecab28345a3
         body = {
-            "timeMin": now,
+            "timeMin": min_time,
             "timeMax": (datetime.datetime.utcnow() + self.time_window).isoformat() + 'Z',
             "timeZone": 'US/Central',
             "items": [{"id": email} for email in triad]
@@ -270,11 +270,12 @@ if __name__ == '__main__':
 #    main()
     calendar_tool = CalendarTool(settings)
     suggested_triads = pd.read_csv(settings.suggested_triads,
-                                   usecols=[0,1,2,3,4]) 
+                                   usecols=[0,1,2,3,4])
+    suggested_triads.fillna('', inplace=True) # Handle NAs from some groups having 3 and some having 4
 
     for triad in suggested_triads.values.tolist():
         group = triad[0:4]
-        group = [name.strip(' ') for name in group] # hack to remove spaces for now -- TODO do this better :)
+        group = [name.strip(' ') for name in group] # remove spaces 
         print(triad)
         event_time = calendar_tool.get_time(group, 
                                             studios=triad[-1])
