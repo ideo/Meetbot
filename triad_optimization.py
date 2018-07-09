@@ -294,4 +294,4 @@ if __name__ == '__main__':
     col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
-    suggested_triad_df.to_csv(settings.save_directory + 'suggested_triads_July_4.csv', index=False)
+    suggested_triad_df.to_csv(settings.save_directory + 'initial_run_PA.csv', index=False)
