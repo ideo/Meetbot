@@ -49,6 +49,7 @@ number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
                            'dvondle@ideo.com': 0,
                            'dlewis@ideo.com': 0,
                            'dogan@ideo.com': 0,
+                           'ppearson@ideo.com': 0
                            }
 
 # calendar settings
