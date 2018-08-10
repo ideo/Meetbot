@@ -6,7 +6,7 @@ inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the proj
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
 chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
-suggested_triads = DATA_DIRECTORY + 'suggested_triads_July.csv'
+suggested_triads = DATA_DIRECTORY + 'august_chicago.csv'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'
@@ -21,11 +21,11 @@ max_meetings = 2
 new_hire_days = 180
 
 # scoring settings
-min_score = 0.9
-score_weights = {'discipline': 3,
+min_score = 0.75
+score_weights = {'discipline': 2,
                  'journey': 1,
                  'new_hire': 0,
-                 'core_project': -2}
+                 'core_project': 1}
 
 # settings for ideal group
 ideal_group = {'discipline': 3,
@@ -37,19 +37,25 @@ ideal_group = {'discipline': 3,
 # Here you can force one person's weights to zero
 number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
                            'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
-                           'dlee@ideo.com': 0,
+                           
                            'fgerlach@ideo.com': 0, # Out of studio
                            'gwinther@ideo.com': 0,
                            'isirer@ideo.com': 0,
                            'loui@ideo.com': 0,
                            'gmitchell@ideo.com': 0,
-                           'bsyverson@ideo.com': 0,
+                           
                            'lnash@ideo.com': 0,
-                           'rcranfill@ideo.com': 0,
+         
                            'dvondle@ideo.com': 0,
                            'dlewis@ideo.com': 0,
                            'dogan@ideo.com': 0,
-                           'ppearson@ideo.com': 0
+                           'ppearson@ideo.com': 0,
+                           'jgambino@ideo.com': 0,
+                           'ckucharczyk@ideo.com': 0,
+                           'ntower@ideo.com': 0,
+                           'lzheng@ideo.com': 0,
+                           'payroll@ideo.com': 0,
+                           'zbachiri@ideo.com': 0,
                            }
 
 # calendar settings
