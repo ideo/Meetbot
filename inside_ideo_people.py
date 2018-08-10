@@ -7,7 +7,8 @@ import requests
 import socket
 import sys
 from bs4 import BeautifulSoup
-from data import settings as dropbox_settings
+import dropbox_settings
+#from data import settings as dropbox_settings
 from tqdm import *
 
 import settings
@@ -172,7 +173,7 @@ def save_data(project_lists, combined_list, data_path, location):
         print('saved file ', json_file)
 
     people_info_df = pd.DataFrame(combined_list)
-    people_info_df.to_csv(csv_path, index=False)
+    people_info_df.to_csv(csv_path, encoding='utf-8', index=False)
 
 
 if __name__ == '__main__':
