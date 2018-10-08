@@ -15,7 +15,7 @@ class BatchGenerator:
         self.people_info_df = pd.read_csv(batch_settings.inside_ideo_csv, parse_dates=['hired_at'])
         self.people_info_df = self.recode_disciplines()
         self.BL_list = pd.read_csv(batch_settings.bl_list_csv)
-        self.pairing_files = glob.glob(batch_settings.save_directory + '*.csv')
+        self.pairing_file = batch_settings.save_directory + 'previous_groupings.csv'
 
         self.directory = pd.read_csv(batch_settings.chideo_directory, parse_dates=['Anniversary'],
                                      encoding="ISO-8859-1")
@@ -171,14 +171,8 @@ class BatchGenerator:
         return (score > self.min_score and bl_check), score
 
     def check_previous_pairings(self, triad):
-
-        combined_data = []
-        for file in self.pairing_files:
-            data = pd.read_csv(file)
-            combined_data.append(data)
-
-        combined_data = pd.concat(combined_data)
-        combined_data.drop(['score'], axis=1, inplace=True)
+        file = self.pairing_file
+        combined_data = pd.read_csv(file)
 
         combined_two_list = []
         for i in range(len(combined_data)):
@@ -189,9 +183,6 @@ class BatchGenerator:
         combined_two_list = set(combined_two_list)
         two_list = set(self.create_two_list_for_triad(triad.email_address.values))
         pair_intersection = two_list.intersection(combined_two_list)
-
-        # if len(pair_intersection) > 0:
-        #     print(pair_intersection)
 
         return len(pair_intersection) == 0
 
@@ -296,6 +287,5 @@ if __name__ == '__main__':
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
 
-    suggested_triad_df.to_csv(settings.save_directory + 'october_chicago_2.csv', index=False)
-
-    batch_df.to_csv(settings.save_directory + 'batch_df.csv')
+    suggested_triad_df.to_csv(settings.save_directory + 'test.csv', index=False)
+    batch_df.to_csv(settings.save_directory + 'test.csv')
