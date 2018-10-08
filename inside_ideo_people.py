@@ -10,7 +10,6 @@ from bs4 import BeautifulSoup
 import dropbox_settings
 #from data import settings as dropbox_settings
 from tqdm import *
-
 import settings
 
 

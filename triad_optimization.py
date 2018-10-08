@@ -1,3 +1,5 @@
+#!/usr/bin/python2.7
+
 import glob
 import json
 from datetime import datetime
@@ -111,7 +113,7 @@ class BatchGenerator:
         score_dict = {'discipline': num_disciplines, 'journey': num_journies, 'new_hire': num_new_hires,
                       'core_project': num_overlap}
 
-        triad_score = self.scoring_function(score_dict) / self.perfect_score
+        triad_score = self.scoring_function(score_dict) #/ self.perfect_score
 
         return triad_score
 
@@ -253,10 +255,11 @@ class BatchGenerator:
 
                 no_overlap = (bl_check) and (previous_pairing_check)
 
-                # print('pair check', previous_pairing_check)
-                # print('bl check', bl_check)
-                # print('no overlap', no_overlap)
-                # print(' ')
+                print('pair check', previous_pairing_check)
+                print('bl check', bl_check)
+                print('no overlap', no_overlap)
+                print('score', group_score, score_check) 
+                print(' ')
 
                 good_group = score_check and no_overlap
 
@@ -293,6 +296,6 @@ if __name__ == '__main__':
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
 
-    suggested_triad_df.to_csv(settings.save_directory + 'initial_run_PA.csv', index=False)
+    suggested_triad_df.to_csv(settings.save_directory + 'october_chicago_2.csv', index=False)
 
     batch_df.to_csv(settings.save_directory + 'batch_df.csv')
