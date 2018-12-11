@@ -72,16 +72,15 @@ earliest_time = 12 # when is the latest the meeting should begin?
 latest_time = 13 # when is the latest the meeting should END?
 time_window = 30 # how many days out should we search for appropriate times?
 event_name = 'Meet n\' Three!'
-event_description = """Hello! Meaty the Meetbot here, inviting you all to go out to lunch. This time looked open on 
-everyone's calendars, but keep in mind I'm only a prototype! I realize that Google calendar is not necessarily an 
-accurate reflection of everyone's life. If this doesn't work for you, please coordinate with each other to find another time! 
 
-You can try a place from our <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">curated list</a>, or choose your own adventure!
+event_description = '''
+Hello! Meaty the Meetbot here, inviting you all to go out to lunch!
+If this doesn't work for you, please coordinate with each other to find another time! 
+Remember that this is a voluntary benefit!  If you are too busy or would rather not participate, feel free to opt out 
+by declining the invitation. 
 
-This is voluntary! If you are too busy or would rather not participate, feel free to decline the invitation and opt out. 
-
+You can try a place from our <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">curated list</a>, or choose your own adventure! 
 Please submit your receipts to ChIDEO Internal: Meet n Three in Expensify. You will be reimbursed up to $20/person.
 
-Happy FaceSlacking!"""
-
-
+Happy FaceSlacking!
+'''
