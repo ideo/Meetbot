@@ -6,7 +6,7 @@ inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the proj
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
 chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
-suggested_triads = DATA_DIRECTORY + 'october_chicago.csv'
+suggested_triads = DATA_DIRECTORY + 'triads_december.csv'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'
@@ -37,32 +37,33 @@ ideal_group = {'discipline': 3,
 # Here you can force one person's weights to zero
 number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
                            'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
-                           
+                           'jsang@ideo.com':0,
                            'fgerlach@ideo.com': 0, # Out of studio
                            'gwinther@ideo.com': 0,
-                           'isirer@ideo.com': 0,
                            'loui@ideo.com': 0,
                            'gmitchell@ideo.com': 0,
-                           
-                           'lnash@ideo.com': 0,
-                           'jsang@ideo.com':0,
+                  
                            'jgrimley@ideo.com': 0,
          
-                           'jfreaner@ideo.com': 0, # in PA through November
                            'dschonthal@ideo.com': 0,
                            'kgilbert@ideo.com': 0,
                            'dlewis@ideo.com': 0,
                            'dogan@ideo.com': 0,
                            'ppearson@ideo.com': 0,
-                           'jgambino@ideo.com': 0,
-                           'ckucharczyk@ideo.com': 0,
                            'ntower@ideo.com': 0,
                            'lzheng@ideo.com': 0,
                            'payroll@ideo.com': 0,
                            'zbachiri@ideo.com': 0,
                            'astewart@ideo.com': 0, 
                            'mweibler@ideo.com': 0,
-                           'tvalentine@ideo.com': 0
+
+                           'lcollins@ideo.com': 0, # project Q out all of december
+                           'mzapan@ideo.com':0,
+                           'mnizinski@ideo.com':0,
+                           'bcarlson@ideo.com': 0,
+
+                           'bpeng@ideo.com': 0, #Shanghai
+                           'zmarkshausen@ideo.com': 0
                            }
 
 # calendar settings

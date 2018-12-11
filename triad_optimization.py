@@ -287,5 +287,5 @@ if __name__ == '__main__':
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
 
-    suggested_triad_df.to_csv(settings.save_directory + 'test.csv', index=False)
-    batch_df.to_csv(settings.save_directory + 'test.csv')
+    suggested_triad_df.to_csv(settings.save_directory + 'triads_december_2.csv', index=False)
+    batch_df.to_csv(settings.save_directory + 'december_test_2.csv')
