@@ -80,7 +80,7 @@ You can try a place from our <a href="https://docs.google.com/document/d/1812VOM
 
 This is voluntary! If you are too busy or would rather not participate, feel free to decline the invitation and opt out. 
 
-Please stick to a budget of about $20/person and expense the cost to Chicago Talent in Concur.
+Please submit your receipts to ChIDEO Internal: Meet n Three in Expensify. You will be reimbursed up to $20/person.
 
 Happy FaceSlacking!"""
 
