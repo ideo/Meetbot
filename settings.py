@@ -1,6 +1,6 @@
 import os
 
-DATA_DIRECTORY = './data/Chicago/'
+DATA_DIRECTORY = './data/'
 
 inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the project lists
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'

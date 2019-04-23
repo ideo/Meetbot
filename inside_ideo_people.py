@@ -1,11 +1,9 @@
 import json
 import os
-import pandas as pd
-import pprint
-import re
-import requests
-import socket
 import sys
+
+import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 from data import settings as dropbox_settings
 from tqdm import *
@@ -22,7 +20,10 @@ class LocationScrape:
                                  'first_name',
                                  'last_name',
                                  'name',
-                                 'hired_at']
+                                 'hired_at',
+                                 'business_lead_em_id',
+                                 'em_id',
+                                 'id']
 
         self.location_page_urls = self.get_multi_page_urls()  # the urls of all the location pages (multiple pages for lots of people)
         self.location_users = self.get_location_users()
@@ -104,8 +105,6 @@ class LocationScrape:
                     for info_list in info_dict:
                         single_person_dict = self.parse_response(info_list, single_person_dict)
 
-            # sys.exit()
-
             project_page_url = 'https://inside.ideo.com/users/{}/get_my_work_projects'.format(user)
 
             response = requests.get(project_page_url,
@@ -113,34 +112,39 @@ class LocationScrape:
                                     timeout=15,
                                     )
 
-            try:
-                project_jsons = response.json()['projects']['Core team']
-                project_id_list = []
-                project_name_list = []
-                projects = {}
-                for p_json in project_jsons:
-                    project_id_list.append(p_json['id'])
-                    project_name_list.append(p_json['name'])
-                    projects[p_json['id']] = p_json['name']
-                project_lists[single_person_dict['email_address']] = project_id_list
+            project_id_list = []
+            # get their core team/leader contributions
+            project_id_list = self.parse_project_response(response, project_id_list, responsibility='Core team')
+            project_id_list = self.parse_project_response(response, project_id_list, responsibility='Project leader')
 
-            except KeyError:
-                project_lists[single_person_dict['email_address']] = []
+            project_lists[single_person_dict['email_address']] = project_id_list
 
             combined_list.append(single_person_dict)
-            print(single_person_dict)
-            print(project_lists)
-
         return combined_list, project_lists
+
+    def parse_project_response(self, response, project_id_list, responsibility='Core team'):
+        try:
+            project_jsons = response.json()['projects'][responsibility]
+            for p_json in project_jsons:
+                project_id_list.append(p_json['id'])
+
+        except KeyError:
+            pass
+        return project_id_list
 
     def parse_response(self, possible_dict, single_person_dict={}):
         try:
             this_dict_keys = possible_dict.keys()
             for key in self.keys_of_interest:
                 if key in this_dict_keys:
-                    if (key == 'name') and ('visible_in_newtube' in this_dict_keys):
-                        single_person_dict['discipline'] = possible_dict[key]
-                    elif key != 'name':
+                    if (key == 'name'):
+                        if ('visible_in_newtube' in this_dict_keys):
+                            single_person_dict['discipline'] = possible_dict[key]
+                        else:
+                            pass
+                    elif key == 'em_id' and ('first_name' not in this_dict_keys):
+                        pass
+                    else:  # key != 'name':
                         single_person_dict = self.check_for_nicknames(possible_dict, single_person_dict, key)
 
         except AttributeError:
@@ -180,23 +184,20 @@ if __name__ == '__main__':
 
     # div class="pagination bottom-pagination" # TODO: incorporate pagination correctly. append the href here onto inside.ideo.com
 
-    base_urls = {'Chicago': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=3'}
-                 # 'Cambridge': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=2',
-                 # 'London': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=4',
-                 # 'Munich': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=5',
-                 # 'New York': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=8',
-                 # 'Palo Alto': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=24'}
-                # 'San Francisco': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=23',
-                # 'Shanghai': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=14',
-                # 'Tokyo': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=15',
-                # 'Global': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=9'}
+    base_urls = {  # 'Chicago': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=3'}
+        # 'Cambridge': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=2',
+        # 'London': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=4',
+        # 'Munich': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=5',
+        # 'New York': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=8',
+        'Palo Alto': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=24'}
+    # 'San Francisco': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=23',
+    # 'Shanghai': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=14',
+    # 'Tokyo': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=15',
+    # 'Global': 'https://inside.ideo.com/users/search?user_location_ids%5B%5D=9'}
 
     # chicago = LocationScrape(base_url_dict = base_urls, location_key ='Palo Alto')
 
     for location in base_urls:
-
         print('scraping ', location)
         data = LocationScrape(base_url_dict=base_urls, location_key=location)
         save_data(data.project_lists, data.combined_list, settings.DATA_DIRECTORY, location)
-
-
