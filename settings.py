@@ -6,7 +6,7 @@ inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the proj
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
 chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
-suggested_triads = DATA_DIRECTORY + 'suggested_triads_July.csv'
+suggested_triads = DATA_DIRECTORY + 'triads_december.csv'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'
@@ -21,9 +21,9 @@ max_meetings = 2
 new_hire_days = 180
 
 # scoring settings
-min_score = 0.9
-score_weights = {'discipline': 3,
-                 'journey': 1,
+min_score = 0.65
+score_weights = {'discipline': 2,
+                 'journey': 2,
                  'new_hire': 0,
                  'core_project': -2}
 
@@ -37,18 +37,33 @@ ideal_group = {'discipline': 3,
 # Here you can force one person's weights to zero
 number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
                            'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
-                           'dlee@ideo.com': 0,
+                           'jsang@ideo.com':0,
                            'fgerlach@ideo.com': 0, # Out of studio
                            'gwinther@ideo.com': 0,
-                           'isirer@ideo.com': 0,
                            'loui@ideo.com': 0,
                            'gmitchell@ideo.com': 0,
-                           'bsyverson@ideo.com': 0,
-                           'lnash@ideo.com': 0,
-                           'rcranfill@ideo.com': 0,
-                           'dvondle@ideo.com': 0,
+                  
+                           'jgrimley@ideo.com': 0,
+         
+                           'dschonthal@ideo.com': 0,
+                           'kgilbert@ideo.com': 0,
                            'dlewis@ideo.com': 0,
                            'dogan@ideo.com': 0,
+                           'ppearson@ideo.com': 0,
+                           'ntower@ideo.com': 0,
+                           'lzheng@ideo.com': 0,
+                           'payroll@ideo.com': 0,
+                           'zbachiri@ideo.com': 0,
+                           'astewart@ideo.com': 0, 
+                           'mweibler@ideo.com': 0,
+
+                           'lcollins@ideo.com': 0, # project Q out all of december
+                           'mzapan@ideo.com':0,
+                           'mnizinski@ideo.com':0,
+                           'bcarlson@ideo.com': 0,
+
+                           'bpeng@ideo.com': 0, #Shanghai
+                           'zmarkshausen@ideo.com': 0
                            }
 
 # calendar settings
@@ -57,16 +72,15 @@ earliest_time = 12 # when is the latest the meeting should begin?
 latest_time = 13 # when is the latest the meeting should END?
 time_window = 30 # how many days out should we search for appropriate times?
 event_name = 'Meet n\' Three!'
-event_description = """Hello! Meaty the Meetbot here, inviting you all to go out to lunch. This time looked open on 
-everyone's calendars, but keep in mind I'm only a prototype! I realize that Google calendar is not necessarily an 
-accurate reflection of everyone's life. If this doesn't work for you, please coordinate with each other to find another time! 
 
-You can try a place from our <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">curated list</a>, or choose your own adventure!
+event_description = '''
+Hello! Meaty the Meetbot here, inviting you all to go out to lunch!
+If this doesn't work for you, please coordinate with each other to find another time! 
+Remember that this is a voluntary benefit!  If you are too busy or would rather not participate, feel free to opt out 
+by declining the invitation. 
 
-This is voluntary! If you are too busy or would rather not participate, feel free to decline the invitation and opt out. 
+You can try a place from our <a href="https://docs.google.com/document/d/1812VOM-ANeDWk0eCCgni5HOvzTEWhEgIurWL0tJqBag/edit">curated list</a>, or choose your own adventure! 
+Please submit your receipts to ChIDEO Internal: Meet n Three in Expensify. You will be reimbursed up to $20/person.
 
-Please stick to a budget of about $20/person and expense the cost to Chicago Talent in Concur.
-
-Happy FaceSlacking!"""
-
-
+Happy FaceSlacking!
+'''

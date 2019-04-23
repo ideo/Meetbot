@@ -160,7 +160,6 @@ class CalendarTool:
         else:
             return False
 
-
     def get_time(self, triad):
 
         credentials = self.get_credentials()
@@ -187,9 +186,13 @@ class CalendarTool:
                 busy_times[busy_window['start']] = 1
                 busy_times[busy_window['end']] = 0
             busy_times_list.append(busy_times)
-
+      
         # combine all of the calendars to find when everyone is free
-        combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
+        try: 
+            combined_free_times = traces.TimeSeries.merge(busy_times_list, operation=sum)
+        except ValueError:
+            print('One of the time series is empty. One of the emails is most likely wrong.')
+            return
 
         all_start_times = self.interim_periods(combined_free_times)
 
@@ -208,6 +211,7 @@ class CalendarTool:
             print(event_time)
 
         return event_time
+
 
     def make_event(self, triad, event_time):
         credentials = self.get_credentials()
@@ -241,14 +245,14 @@ class CalendarTool:
         print('Event created: %s' % (event.get('htmlLink')))
 
         return
-    
+
 if __name__ == '__main__':
 #    main()
     calendar_tool = CalendarTool(settings)
     suggested_triads = pd.read_csv(settings.suggested_triads,
                                    usecols=[0,1,2]) #TODO: handle different length input than 3
-
     for triad in suggested_triads.values.tolist():
         print(triad)
         event_time = calendar_tool.get_time(triad)
-        #calendar_tool.make_event(triad, event_time)
+        if event_time:
+            calendar_tool.make_event(triad, event_time)
