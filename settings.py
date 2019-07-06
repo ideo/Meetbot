@@ -1,17 +1,24 @@
 import os
 
-DATA_DIRECTORY = './data/'
-
-inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the project lists
-inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
-bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
-chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
-suggested_triads = DATA_DIRECTORY + 'triads_december.csv'
+DATA_DIRECTORY = './data/Chicago/'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'
 if not os.path.exists(save_directory):
     os.mkdir(save_directory)
+
+
+inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the project lists
+inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
+bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
+chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
+suggested_triads = save_directory + 'triads_2.csv'
+batch_info = save_directory + 'triads_info_2.csv'
+
+# # where to save the groups
+# save_directory = DATA_DIRECTORY + 'previous_groupings/'
+# if not os.path.exists(save_directory):
+#     os.mkdir(save_directory)
 
 # settings for batch generation
 number_in_group = 3
@@ -21,9 +28,9 @@ max_meetings = 2
 new_hire_days = 180
 
 # scoring settings
-min_score = 0.65
-score_weights = {'discipline': 2,
-                 'journey': 2,
+min_score = 0.45
+score_weights = {'discipline': 3,
+                 'journey': 0.25,
                  'new_hire': 0,
                  'core_project': -2}
 
@@ -42,7 +49,7 @@ number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
                            'gwinther@ideo.com': 0,
                            'loui@ideo.com': 0,
                            'gmitchell@ideo.com': 0,
-                  
+                            'dlee@ideo.com':0,
                            'jgrimley@ideo.com': 0,
          
                            'dschonthal@ideo.com': 0,
@@ -56,12 +63,16 @@ number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
                            'zbachiri@ideo.com': 0,
                            'astewart@ideo.com': 0, 
                            'mweibler@ideo.com': 0,
+                           'plorenzoni@ideo.com':0,
 
-                           'lcollins@ideo.com': 0, # project Q out all of december
-                           'mzapan@ideo.com':0,
-                           'mnizinski@ideo.com':0,
-                           'bcarlson@ideo.com': 0,
-
+                           # 'lcollins@ideo.com': 0, # project Q out all of december
+                           # 'mzapan@ideo.com':0,
+                           # 'mnizinski@ideo.com':0,
+                           # 'bcarlson@ideo.com': 0,
+                           'jzanzig@ideo.com':0,
+                           'lnash@ideo.com':0,
+                           'tvalentine@ideo.com':0,
+                            'jgambino@ideo.com':0,
                            'bpeng@ideo.com': 0, #Shanghai
                            'zmarkshausen@ideo.com': 0
                            }

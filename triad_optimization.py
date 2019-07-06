@@ -1,6 +1,5 @@
 #!/usr/bin/python2.7
 
-import glob
 import json
 from datetime import datetime
 
@@ -16,15 +15,18 @@ class BatchGenerator:
         self.people_info_df = self.recode_disciplines()
         self.BL_list = pd.read_csv(batch_settings.bl_list_csv)
         self.pairing_file = batch_settings.save_directory + 'previous_groupings.csv'
+        self.previous_pairings = self.get_previous_pairings()
 
-        self.directory = pd.read_csv(batch_settings.chideo_directory, parse_dates=['Anniversary'],
-                                     encoding="ISO-8859-1")
+        # self.directory = pd.read_csv(batch_settings.chideo_directory, parse_dates=['Anniversary'],
+        #                              encoding="ISO-8859-1")
         with open(batch_settings.inside_ideo_json) as json_data:
             self.project_lists = json.load(json_data)
 
-        self.combined = self.people_info_df.merge(self.directory, left_on='email_address', right_on='Email')
-        self.combined = self.combined[
-            ['first_name', 'email_address', 'Journey', 'discipline', 'Anniversary', 'hired_at']]
+        # self.combined = self.people_info_df.merge(self.directory, left_on='email_address', right_on='Email')
+        self.combined = self.people_info_df[
+            # ['first_name', 'email_address', 'Journey', 'discipline', 'Anniversary', 'hired_at']]
+            ['first_name', 'email_address', 'title', 'discipline', 'hired_at']]
+        self.combined = self.combined.rename(columns={"title": "Journey"})
 
         self.number_in_group = batch_settings.number_in_group
         self.min_disciplines = batch_settings.min_disciplines
@@ -69,9 +71,19 @@ class BatchGenerator:
 
         group_projects = []
         for email_address in triad.email_address:
-            projects = self.project_lists[email_address]
-            for project in projects:
-                group_projects.append(project)
+            journey = triad_data[triad_data['email_address']==email_address].Journey.values[0]
+            role = triad_data[triad_data['email_address']==email_address].discipline.values[0]
+            print(journey)
+            print(email_address)
+            print(' ')
+
+            if journey != 'Director' and journey != 'Enterprise' and role != 'Support':
+                projects = self.project_lists[email_address]
+                for project in projects:
+
+                    group_projects.append(project)
+            else:
+                print('not incluced ', email_address)
 
         group_projects = pd.Series(group_projects)
         group_projects = group_projects.value_counts() - 1
@@ -90,7 +102,7 @@ class BatchGenerator:
             num_disciplines = num_disciplines - 1
 
         # convert journies to numbers
-        journey_number = {'nan':0,
+        journey_number = {'nan': 0,
                           'Intern': 0,
                           '(Temp)': 0,
                           'Individual': 1,
@@ -101,7 +113,7 @@ class BatchGenerator:
         triad_journies = np.array([journey_number[str(i)] for i in triad_data.Journey])
 
         if len(triad_journies[triad_journies >= 3]) > 1:
-            sub = 4
+            sub = 10 * len(triad_journies[triad_journies >= 3])
         else:
             sub = 0
 
@@ -113,9 +125,15 @@ class BatchGenerator:
         score_dict = {'discipline': num_disciplines, 'journey': num_journies, 'new_hire': num_new_hires,
                       'core_project': num_overlap}
 
-        triad_score = self.scoring_function(score_dict) #/ self.perfect_score
+        triad_score = self.scoring_function(score_dict)
 
-        return triad_score
+        print(triad_data.discipline.unique())
+        print(score_dict)
+        print(triad_score)
+        print(self.perfect_score)
+        print(' ')
+
+        return triad_score / self.perfect_score
 
     def scoring_function(self, score_dict):  # base class
         score_weights = self.score_weights
@@ -126,6 +144,12 @@ class BatchGenerator:
             weight = score_weights[key]
 
             triad_score += weight * score
+
+            if key == 'core_project' and score == 0:
+                print('triad score before ', triad_score)
+
+                triad_score += 2 * abs(weight)
+                print('triad score after ', triad_score)
 
         return triad_score
 
@@ -170,9 +194,25 @@ class BatchGenerator:
 
         return (score > self.min_score and bl_check), score
 
+    def get_previous_pairings(self):
+        import glob
+        previous_grouping_files = glob.glob(settings.save_directory + "*.csv")
+
+        count = 0
+        previous_groups = []
+        for file in previous_grouping_files:
+            print(file)
+            data = pd.read_csv(file)
+            if count == 0:
+                previous_groups = data
+                count += 1
+            else:
+                previous_groups = pd.concat([previous_groups, data])
+
+        return previous_groups
+
     def check_previous_pairings(self, triad):
-        file = self.pairing_file
-        combined_data = pd.read_csv(file)
+        combined_data = self.previous_pairings
 
         combined_two_list = []
         for i in range(len(combined_data)):
@@ -212,11 +252,12 @@ class BatchGenerator:
 
     def generate_batch(self):  # paired lunch
         batch_df = self.combined.copy()
+        print(batch_df)
         print('combined length is ', len(batch_df))
 
         batch_df['tenure'] = datetime.now() - batch_df['hired_at']
         batch_df['number_of_meetings'] = 0
-        batch_df['max_meetings'] = 2  # default max_meetings is 2
+        batch_df['max_meetings'] = settings.max_meetings  # default max_meetings is 2
 
         # set max meetings for specific people
         special_number = self.number_of_meetings_dict
@@ -238,7 +279,7 @@ class BatchGenerator:
 
             best_group = []
             high_score = -100
-            while (not good_group and iterations < 100):
+            while (not good_group and iterations < 40):
                 triad, batch_df = self.generate_single(batch_df)
                 score_check, group_score = self.check_score(triad)
                 bl_check = self.check_bl(triad)
@@ -246,10 +287,11 @@ class BatchGenerator:
 
                 no_overlap = (bl_check) and (previous_pairing_check)
 
+                print('triad ', triad)
                 print('pair check', previous_pairing_check)
                 print('bl check', bl_check)
                 print('no overlap', no_overlap)
-                print('score', group_score, score_check) 
+                print('score', group_score, score_check)
                 print(' ')
 
                 good_group = score_check and no_overlap
@@ -282,10 +324,9 @@ if __name__ == '__main__':
         emails = list(triads[i]['email_address'].values)
         file_data.append(emails)
 
-    print(file_data)
     col_names = ['person_{}'.format(i) for i in range(len(file_data[0]))]
     suggested_triad_df = pd.DataFrame(file_data, columns=col_names)
     suggested_triad_df['score'] = scores
 
-    suggested_triad_df.to_csv(settings.save_directory + 'triads_december_2.csv', index=False)
-    batch_df.to_csv(settings.save_directory + 'december_test_2.csv')
+    suggested_triad_df.to_csv(settings.suggested_triads, index=False)
+    batch_df.to_csv(settings.batch_info)
