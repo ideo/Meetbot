@@ -1,6 +1,8 @@
 import json
 import os
 import sys
+import datetime
+from pathlib import Path
 
 import pandas as pd
 import requests
@@ -58,6 +60,14 @@ class LocationScrape(luigi.Task):
         self.location_page_urls = self.get_multi_page_urls()  # the urls of all the location pages (multiple pages for lots of people)
         self.location_users = self.get_location_users()
         self.combined_list, self.project_lists = self.get_person_data()
+
+        with self.output()['project_json'].open('w') as output_file:
+            json.dump(self.project_lists, output_file)
+            print('saved file ', output_file)
+
+        people_info_df = pd.DataFrame(self.combined_list)
+        with self.output()['directory'].open('w') as output_file:
+            people_info_df.to_csv(output_file, index=False)
 
     def get_multi_page_urls(self):
         ''' Goes through pagination to get the urls for all the studio's people pages '''
@@ -126,14 +136,21 @@ class LocationScrape(luigi.Task):
             # extract info that we want
             single_person_dict = {}
             try:
+                for i in range(len(person_info)):
+                    info_dict = person_info[i]
+
+                    if i == 0:
+                        self.parse_response(info_dict, single_person_dict)
+
+                    if i == 1:
+                        self.parse_response(info_dict[0], single_person_dict)
 
                 project_page_url = 'https://inside.ideo.com/users/{}/get_my_work_projects'.format(user)
-                print(project_page_url)
                 response = requests.get(project_page_url,
                                         headers=HEADERS,
                                         timeout=15,
                                         )
-                print(response)
+
                 project_id_list = []
                 # get their core team/leader contributions
                 project_id_list = self.parse_project_response(response, project_id_list, responsibility='Team')
@@ -190,18 +207,22 @@ class LocationScrape(luigi.Task):
                 single_person_dict[key] = possible_dict[key]
         return single_person_dict
 
-    def save_data(project_lists, combined_list, data_path, location):
-        save_directory = os.path.join(data_path, location)
-        if not os.path.exists(save_directory):
-            os.mkdir(save_directory)
-        json_file = os.path.join(save_directory, 'project_json.json')
-        csv_path = os.path.join(save_directory, 'directory_data.csv')
-        with open(json_file, 'w') as fp:
-            json.dump(project_lists, fp)
-            print('saved file ', json_file)
+    def output(self):
+        data_path = Path(settings.DATA_DIRECTORY)
+        data_path = data_path / self.location_name
 
-        people_info_df = pd.DataFrame(combined_list)
-        people_info_df.to_csv(csv_path, encoding='utf-8', index=False)
+            #o
+        date_string = datetime.datetime.today().strftime("%Y-%m")
+        directory = luigi.LocalTarget(data_path / (date_string + '_directory_data.csv'))
+        project_json = luigi.LocalTarget(data_path / (date_string + '_project_json.json'))
+
+        return {'directory': directory, 'project_json':project_json}
+
 
 if __name__ == '__main__':
-    tr = LocationScrape(location_name = 'Palo Alto').run()
+
+    locations = ['Chicago', 'San Francisco', 'Palo Alto']
+
+    for location in locations:
+        tr = LocationScrape(location_name = location)
+        luigi.build([tr], local_scheduler=True)
