@@ -1,9 +1,12 @@
 import numpy as np
 import pandas as pd
 
+
 class LocationScore():
-    def __init__(self, location_name):
-        self.location_name = location_name
+    def __init__(self, GroupsClass):
+        self.projects = GroupsClass.project_lists
+        self.directory_data = GroupsClass.directory_data
+
 
     '''Scoring functions below'''
 
@@ -68,7 +71,7 @@ class LocationScore():
     def shared_projects(self, group):
         all_member_projects = []
         for member in group:
-            member_projects = PROJECTS[member]
+            member_projects = self.projects[member]
             all_member_projects += member_projects
         group_projects = pd.Series(all_member_projects)
         group_projects = group_projects.value_counts() - 1
@@ -105,23 +108,34 @@ class LocationScore():
             divisions.append(member_divisions)
         divisions = np.array(divisions)
 
-        condition = ((divisions == 'Support'))
+        condition = (divisions == 'Support')
         if len(divisions[condition]) > 1:
             score = 10
         else:
             score = (3 - (len(set(divisions)))) / 3
         return score
 
+    def score_group(self, group):
+        print('override me in your class')
 
-def recode_project_dict(project_lists, dir_data):
-    new_dict = dict()
-    for name in project_lists.keys():
-        try:
-            emp_id = dir_data[dir_data['email_address'] == name]['em_id'].values[0]
-            new_dict[emp_id] = project_lists[name]
-        except IndexError:
-            pass
-    return new_dict
+
+class SanFranciscoScore(LocationScore):
+
+    def score_group(self, group):
+
+        title_s = self.title_score(group)
+        shared = self.shared_projects(group)
+        division = self.division_score(group)
+        bl_overlap = self.bl_in_group(group)
+        discipline_var = self.discipline_variety(group)
+        tenure_s = self.tenure_score(group)
+
+        group_score = (
+                          4 * shared + 4 * title_s + 5 * division + 5 * discipline_var + 3 * tenure_s + 10 * bl_overlap) / 22
+        sub_scores = ([title_s, shared, division, bl_overlap, discipline_var, tenure_s, group_score])
+
+        return group_score, sub_scores
+
 
 if __name__ == '__main__':
     print('hello')

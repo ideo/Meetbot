@@ -221,7 +221,7 @@ class LocationScrape(luigi.Task):
 
 if __name__ == '__main__':
 
-    locations = ['Chicago', 'San Francisco', 'Palo Alto']
+    locations = ['Chicago', 'San Francisco', 'Palo Alto', 'Shanghai']
 
     for location in locations:
         tr = LocationScrape(location_name = location)

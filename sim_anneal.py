@@ -6,21 +6,31 @@ from location_scores import LocationScore
 class MakeAnnealedGroups(Annealer):
     """Test annealer"""
 
-    def __init__(self, groups, project_lists, directory_data, location_name):
-        self.state = groups # starting state for groups
-        self.projects = project_lists
-        self.directory_data = directory_data
+    def __init__(self, GroupsClass):
+        #Groups class groups, project_lists, directory_data, location_name
+        self.projects = GroupsClass.project_lists
+        self.directory_data = GroupsClass.directory_data
 
-        self.scores = np.zeros(len(groups))
-        self.sub_scores = np.zeros([len(groups), 4])
-        self.scoring_function = LocationScore(location_name=location_name)
+        self.state = None # starting state for groups
+        self.current_score = None
+        self.scores = None
+        self.sub_scores = None
+        self.scoring_function = GroupsClass.scoring
+
+
+    def initialize_state(self):
+        random_emp = self.directory_data.sample(frac=1)
+        random_emp_num = random_emp['Employee #'].values
+        random_emp_num_short = random_emp_num[:len(random_emp_num) // 3 * 3]
+        groups = np.array(np.split(random_emp_num_short, 3)).T
+        return groups
 
     def move(self):
         """Swaps two people in groups."""
 
         group1 = random.randint(0, len(
-            groups) - 1)  # np.where(self.scores == max(self.scores))[0][0]#random.randint(0, len(groups)-1)
-        group2 = random.randint(0, len(groups) - 1)
+            self.state) - 1)  # np.where(self.scores == max(self.scores))[0][0]#random.randint(0, len(groups)-1)
+        group2 = random.randint(0, len(self.state) - 1)
 
         a = random.randint(0, 2)
         b = random.randint(0, 2)
@@ -31,6 +41,7 @@ class MakeAnnealedGroups(Annealer):
         new_state[group2, b] = self.state[group1, a]
         self.state = new_state
 
+
     def energy(self):
         """Calculates the energy as the number of shared projects."""
         e = 0
@@ -38,26 +49,27 @@ class MakeAnnealedGroups(Annealer):
         scores = []
         sub_scores = []
         for group in self.state:
-            title_s = title_score(group)
-            shared = shared_projects(group)
-            division = division_score(group)
-            bl_overlap = bl_in_group(group, self.directory_data)
-            discipline_var = discipline_variety(group, self.directory_data)
-            tenure_s = tenure_score(group)
-
-            group_score = (
-                              4 * shared + 4 * title_s + 5 * division + 5 * discipline_var + 3 * tenure_s + 10 * bl_overlap) / 22
-            sub_scores.append([title_s, shared, division, bl_overlap, discipline_var, tenure_s, group_score])
+            group_score, sub_score = self.scoring_function.score_group(group)
 
             e += group_score
             scores.append(group_score)
+            sub_scores.append(sub_score)
         self.scores = np.array(scores)
         self.sub_scores = np.array(sub_scores)
+        print('I moved people', self.current_score, e)
+        self.current_score = e
 
         return e
 
     def run(self):
+        self.state = self.initialize_state()
+        print('state initialized...')
+        self.steps = 500  # 15000
+        self.Tmax = 70
+        self.Tmin = 0.001
+
         self.anneal()
+        print(self.state)
 
 if __name__ == '__main__':
     print('hello')
