@@ -1,6 +1,6 @@
 import os
 
-DATA_DIRECTORY = './data/Chicago/'
+DATA_DIRECTORY = './data/'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'

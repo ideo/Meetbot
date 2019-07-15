@@ -1,22 +1,22 @@
-from simanneal import Annealer
-import numpy as np
 import random
-from location_scores import LocationScore
+
+import numpy as np
+from simanneal import Annealer
+
 
 class MakeAnnealedGroups(Annealer):
     """Test annealer"""
 
     def __init__(self, GroupsClass):
-        #Groups class groups, project_lists, directory_data, location_name
+        # Groups class groups, project_lists, directory_data, location_name
         self.projects = GroupsClass.project_lists
         self.directory_data = GroupsClass.directory_data
 
-        self.state = None # starting state for groups
+        self.state = None  # starting state for groups
         self.current_score = None
         self.scores = None
         self.sub_scores = None
         self.scoring_function = GroupsClass.scoring
-
 
     def initialize_state(self):
         random_emp = self.directory_data.sample(frac=1)
@@ -41,7 +41,6 @@ class MakeAnnealedGroups(Annealer):
         new_state[group2, b] = self.state[group1, a]
         self.state = new_state
 
-
     def energy(self):
         """Calculates the energy as the number of shared projects."""
         e = 0
@@ -56,23 +55,18 @@ class MakeAnnealedGroups(Annealer):
             sub_scores.append(sub_score)
         self.scores = np.array(scores)
         self.sub_scores = np.array(sub_scores)
-        print('I moved people', self.current_score, e)
         self.current_score = e
-
+        print(e)
         return e
 
     def run(self):
         self.state = self.initialize_state()
-        print('state initialized...')
-        self.steps = 500  # 15000
+        self.steps = 2000  # 15000
         self.Tmax = 70
         self.Tmin = 0.001
 
         self.anneal()
-        print(self.state)
+
 
 if __name__ == '__main__':
     print('hello')
-
-
-

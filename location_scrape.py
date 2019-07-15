@@ -1,16 +1,14 @@
-import json
-import os
-import sys
 import datetime
+import json
 from pathlib import Path
 
+import luigi
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
 # import dropbox_settings
 import settings
-import luigi
 
 COOKIE = '_ga=GA1.2.720540782.1504809510; CloudFront-Key-Pair-Id=APKAIJUKKONKFCXJKXRQ; __zlcmid=qki06CTyPxO1JH; dismissed_msg=Alert%3A%20There%20is%20a%20bug%20with%20the%20People%20Page%2FMy%20Work%20Section%20where%20projects%20are%20not%20populating%20correctly.%20We%20are%20working%20on%20a%20resolution%2C%20let%20us%20know%20if%20you%20have%20any%20questions%20by%20using%20the%20Feedback%20tab%20below.; __unam=5b2fc70-16345698ecc-792af5f3-6; _gid=GA1.2.1220494951.1562796453; _session_id=e7658bc5e6ccdc640d8010f833c654ad; CloudFront-Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9jZi5pbnNpZGUuaWRlby5jb20vKiIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTU3MDgyNjU1NH19fV19; CloudFront-Signature=eqCHg1F1qTE7I1pzhQrnGQAwjBImzKru0UZhjKEo5kAJcsv0pO-ziO%7EGBydK-gy0FwFHwdYDWr%7E2YhDpiTzO0eHYAlSfOR8dymyoukaQdJgrVct4o4P19uIzyLwDRuadmXepoYf1gadMbhB8cBKWl5IF5MtMYNs2ip2upK-bHITxjZQ4%7EqZn%7EX%7EHEf0LXoogR2ynFumgm-Yt1iGBtfqxxT0OlGb7QWxSy2S2N9hzDdLWvyyDCGwEl2HXwvWfc1loktZNmHQT8WassLDDoq30TeY5BYaCuVQY54BUYNHW5bIN5Z-y3BrxgyX-b-Qv0nLSaoPIfFoEQ8dTHrhLR%7E0w6Q__'
 

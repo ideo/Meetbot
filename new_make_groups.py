@@ -1,3 +1,4 @@
+import datetime
 import json
 from multiprocessing import Process
 from pathlib import Path
@@ -6,6 +7,7 @@ import luigi
 import numpy as np
 import pandas as pd
 
+import settings
 from location_scores import SanFranciscoScore
 from location_scrape import LocationScrape
 from sim_anneal import MakeAnnealedGroups
@@ -89,6 +91,18 @@ class MakeGroups(luigi.Task):
         self.scoring = self.scoring(self)
         self.optimizer = self.optimizer(self)
         self.optimizer.run()
+        self.group_socre = self.optimizer
+
+        data_path = Path(settings.DATA_DIRECTORY)
+        data_path = data_path / self.location_name / 'lunch_groups'
+        date_string = datetime.datetime.today().strftime("%Y-%m")
+
+        lunch_groups = pd.DataFrame(self.optimizer.state)
+        score = np.floor(pd.DataGrame(self.optimizer.current_score))
+
+        save_path = luigi.LocalTarget(data_path / (date_string + 'lunch_groups_{}.csv').format(score))
+        with save_path as output_file:
+            lunch_groups.to_csv(output_file, index=False)
 
 
 class MakeGroupsSF(MakeGroups):
@@ -119,12 +133,12 @@ class MakeGroupsSF(MakeGroups):
         self.directory_data = SF_data
 
     def combine_project_data(self):
-        PA_PROJECT_PATH = './data/Palo Alto/project_json.json'
-        SF_PROJECT_PATH = './data/San Francisco/project_json.json'
-        with open(SF_PROJECT_PATH) as json_data:
+        pa_project_path = self.input()['Palo Alto']['project_json'].path
+        sf_project_path = self.input()['San Francisco']['project_json'].path
+        with open(sf_project_path) as json_data:
             project_lists_SF = json.load(json_data)
 
-        with open(PA_PROJECT_PATH) as json_data:
+        with open(pa_project_path) as json_data:
             project_lists_PA = json.load(json_data)
 
         self.project_lists = dict(project_lists_SF, **project_lists_PA)
@@ -136,7 +150,6 @@ if __name__ == '__main__':
     locations = ['San Francisco']
 
     for location in locations:
-        print(location)
 
         num_iterations = 3
         things_to_start = []
@@ -156,11 +169,3 @@ if __name__ == '__main__':
 
         for thing in started_tasks:
             thing.join()
-            # p1 = Process(target = luigi.build, args = ([[tr]]), kwargs = {'local_scheduler':True})
-            # p1.start()
-            # p2 = Process(target=luigi.build, args=([[tr2]]), kwargs={'local_scheduler': True})
-            # p2.start()
-            #
-            # p1.join()
-            # p2.join()
-            # #luigi.build([tr], local_scheduler=True)
