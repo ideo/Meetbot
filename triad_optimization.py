@@ -17,14 +17,10 @@ class BatchGenerator:
         self.pairing_file = batch_settings.save_directory + 'previous_groupings.csv'
         self.previous_pairings = self.get_previous_pairings()
 
-        # self.directory = pd.read_csv(batch_settings.chideo_directory, parse_dates=['Anniversary'],
-        #                              encoding="ISO-8859-1")
         with open(batch_settings.inside_ideo_json) as json_data:
             self.project_lists = json.load(json_data)
 
-        # self.combined = self.people_info_df.merge(self.directory, left_on='email_address', right_on='Email')
         self.combined = self.people_info_df[
-            # ['first_name', 'email_address', 'Journey', 'discipline', 'Anniversary', 'hired_at']]
             ['first_name', 'email_address', 'title', 'discipline', 'hired_at']]
         self.combined = self.combined.rename(columns={"title": "Journey"})
 
@@ -48,8 +44,7 @@ class BatchGenerator:
             output = df_to_sample
         return output
 
-    def recode_disciplines(self):  # paired lunch specific
-        # recodes support disicplines
+    def recode_disciplines(self): 
         support_discipline_list = [{'discipline': {'Talent': 'Support'}},
                                    {'discipline': {'Marketing': 'Support'}},
                                    {'discipline': {'Coordination': 'Support'}},
@@ -63,6 +58,17 @@ class BatchGenerator:
             recoded_df = recoded_df.replace(to_replace=replacement_dict)
 
         return recoded_df
+
+    def recode_journeys(self):
+        # TODO: break this out into its own preprocessing function
+        return
+
+    def recode_hire_date(self):
+        # TODO: break this out into its own preprocessing function
+
+
+    
+
 
     def calculate_triad_score(self, triad):  # paired lunch specific
 
@@ -153,7 +159,7 @@ class BatchGenerator:
 
         return triad_score
 
-    def generate_single(self, people_info_df, default_member=None):  # split into part base class/other maybe
+    def generate_single(self, people_info_df, default_member=None): 
         min_disciplines = self.min_disciplines
         new_hire_days = self.new_hire_days
         number_in_group = self.number_in_group
@@ -172,7 +178,7 @@ class BatchGenerator:
             new_hire = default_member  # replace new hire with the person we want to form the group for
 
         everyone_else = people_info_df[~people_info_df.index.isin(new_hire.index)]
-        # grab the other two people! (if there are two other people!
+        # grab the other two people! (if there are two other people!)
         others = self.sample_df(everyone_else, number_in_group - 1)
         triad = pd.concat([new_hire, others])
 
@@ -226,6 +232,7 @@ class BatchGenerator:
 
         return len(pair_intersection) == 0
 
+    # get every set of pairs from a triad to check them against the BL-BLee pairs
     def create_two_list_for_triad(self, email_ad):  # base class
         two_list = []
         for i in range(len(email_ad)):
@@ -236,10 +243,10 @@ class BatchGenerator:
 
     def check_bl(self, triad):  # paired lunch
         # make pairs from triad
-
+    
         email_ad = triad.email_address.values
         two_list = self.create_two_list_for_triad(email_ad)
-
+        
         # check against BL
         two_list = set(two_list)
 

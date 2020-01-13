@@ -1,24 +1,17 @@
 import os
 
-DATA_DIRECTORY = './data/Chicago/'
+DATA_DIRECTORY = './data/Chicago/Chicago/'
 
 # where to save the groups
 save_directory = DATA_DIRECTORY + 'previous_groupings/'
 if not os.path.exists(save_directory):
     os.mkdir(save_directory)
 
-
 inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the project lists
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
 bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
-chideo_directory = DATA_DIRECTORY + 'ChIDEO_directory.csv'
-suggested_triads = save_directory + 'triads_2.csv'
-batch_info = save_directory + 'triads_info_2.csv'
-
-# # where to save the groups
-# save_directory = DATA_DIRECTORY + 'previous_groupings/'
-# if not os.path.exists(save_directory):
-#     os.mkdir(save_directory)
+suggested_triads = save_directory + 'triads_jan_2020.csv'
+batch_info = save_directory + 'triads_info_jan_2020.csv'
 
 # settings for batch generation
 number_in_group = 3
@@ -42,38 +35,24 @@ ideal_group = {'discipline': 3,
 
 # special settings
 # Here you can force one person's weights to zero
-number_of_meetings_dict = {'mandywong@ideo.com': 0,  # Old intern?
-                           'matthewgs@ideo.com': 0, # Matthew is on Inside IDEO twice
-                           'jsang@ideo.com':0,
-                           'fgerlach@ideo.com': 0, # Out of studio
-                           'gwinther@ideo.com': 0,
-                           'loui@ideo.com': 0,
-                           'gmitchell@ideo.com': 0,
-                            'dlee@ideo.com':0,
+number_of_meetings_dict = {                           
+                           'vhammel@ideo.com': 0,
                            'jgrimley@ideo.com': 0,
-         
+                           'rcranfill@ideo.com': 0,
                            'dschonthal@ideo.com': 0,
                            'kgilbert@ideo.com': 0,
-                           'dlewis@ideo.com': 0,
-                           'dogan@ideo.com': 0,
                            'ppearson@ideo.com': 0,
-                           'ntower@ideo.com': 0,
-                           'lzheng@ideo.com': 0,
                            'payroll@ideo.com': 0,
-                           'zbachiri@ideo.com': 0,
-                           'astewart@ideo.com': 0, 
                            'mweibler@ideo.com': 0,
-                           'plorenzoni@ideo.com':0,
-
-                           # 'lcollins@ideo.com': 0, # project Q out all of december
-                           # 'mzapan@ideo.com':0,
-                           # 'mnizinski@ideo.com':0,
-                           # 'bcarlson@ideo.com': 0,
+                           'zali@ideo.com': 0,
+                           'nsteinsultz@ideo.com': 0,
+                           'jmueller@ideo.com': 0,
+                           'ksoven@ideo.com': 0,
+                           'kswanson@ideo.com': 0,
+                           'mzapan@ideo.com':0,
                            'jzanzig@ideo.com':0,
                            'lnash@ideo.com':0,
-                           'tvalentine@ideo.com':0,
-                            'jgambino@ideo.com':0,
-                           'bpeng@ideo.com': 0, #Shanghai
+                           'jgambino@ideo.com':0,
                            'zmarkshausen@ideo.com': 0
                            }
 
