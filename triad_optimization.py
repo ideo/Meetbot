@@ -10,17 +10,17 @@ class BatchGenerator:
     def __init__(self, batch_settings):
         self.people_info_df = pd.read_csv(batch_settings.inside_ideo_csv, parse_dates=['hired_at'])
         self.people_info_df = self.recode_disciplines()
-        self.people_info_df['business_lead'] = self.get_bls()
+
+        self.people_info_df['journey'] = self.recode_journeys('title')
+        self.people_info_df['business_lead'] = self.get_bls('business_lead_em_id')
+        self.people_info_df['tenure'] = self.recode_hire_date('hired_at')
+
         self.pairing_file = batch_settings.save_directory + 'previous_groupings.csv'
         self.previous_pairings = self.get_previous_pairings()
 
         with open(batch_settings.inside_ideo_json) as json_data:
             self.project_lists = json.load(json_data)
-
-        self.combined = self.people_info_df[
-            ['first_name', 'email_address', 'title', 'discipline', 'hired_at']]
-        self.combined = self.combined.rename(columns={"title": "Journey"})
-
+   
         self.number_in_group = batch_settings.number_in_group
         self.min_disciplines = batch_settings.min_disciplines
         self.new_hire_days = batch_settings.new_hire_days
@@ -41,7 +41,8 @@ class BatchGenerator:
             output = df_to_sample
         return output
 
-    def recode_disciplines(self): 
+    def recode_disciplines(self):
+        # TODO: rewrite to match other recoding  
         support_discipline_list = [{'discipline': {'Talent': 'Support'}},
                                    {'discipline': {'Marketing': 'Support'}},
                                    {'discipline': {'Coordination': 'Support'}},
@@ -56,58 +57,8 @@ class BatchGenerator:
 
         return recoded_df
 
-    def recode_journeys(self):
-        # TODO: break this out into its own preprocessing function
-        return
-
-    def recode_hire_date(self):
-        # TODO: break this out into its own preprocessing function
-        return
- 
-    def get_bls(self):
-        em_id_to_email = pd.Series(self.people_info_df.email_address.values,
-                                   index=self.people_info_df.em_id).to_dict() 
-        bls = self.people_info_df['business_lead_em_id'].replace(em_id_to_email)
-        return bls
-
-    def calculate_triad_score(self, triad):  # paired lunch specific
-
-        combined = self.combined
-        triad_data = combined[combined['email_address'].isin(triad.email_address)]
-
-        group_projects = []
-        for email_address in triad.email_address:
-            journey = triad_data[triad_data['email_address']==email_address].Journey.values[0]
-            role = triad_data[triad_data['email_address']==email_address].discipline.values[0]
-            print(journey)
-            print(email_address)
-            print(' ')
-
-            if journey != 'Director' and journey != 'Enterprise' and role != 'Support':
-                projects = self.project_lists[email_address]
-                for project in projects:
-
-                    group_projects.append(project)
-            else:
-                print('not incluced ', email_address)
-
-        group_projects = pd.Series(group_projects)
-        group_projects = group_projects.value_counts() - 1
-
-        num_overlap = group_projects.sum()
-
-        num_disciplines = len(triad_data.discipline.unique())
-
-        # penalize 2 data scientists
-        try:
-            ds_count = triad_data['discipline'].value_counts()['Data Science']
-        except KeyError:
-            ds_count = 0
-
-        if ds_count > 1:
-            num_disciplines = num_disciplines - 1
-
-        # convert journies to numbers
+    def recode_journeys(self, journey_col_name):
+        # Change journey title to a numerical variable 
         journey_number = {'nan': 0,
                           'Intern': 0,
                           '(Temp)': 0,
@@ -116,19 +67,42 @@ class BatchGenerator:
                           'Director': 3,
                           'Enterprise': 3}
 
-        triad_journies = np.array([journey_number[str(i)] for i in triad_data.Journey])
+        journey_numerical = self.people_info_df[journey_col_name].replace(journey_number)
+        
+        return journey_numerical
 
-        if len(triad_journies[triad_journies >= 3]) > 1:
-            sub = 10 * len(triad_journies[triad_journies >= 3])
-        else:
-            sub = 0
+    def recode_hire_date(self, hire_date_col_name):
+        # Recode hire date to be # of days worked at IDEO
+        tenure = datetime.now() - self.people_info_df[hire_date_col_name]
+        
+        return tenure
+ 
+    def get_bls(self, business_lead_col_name):
+        em_id_to_email = pd.Series(self.people_info_df.email_address.values,
+                                   index=self.people_info_df.em_id).to_dict() 
+        bls = self.people_info_df[business_lead_col_name].replace(em_id_to_email)
+        
+        return bls
 
-        num_journies = np.max(triad_journies) - np.min(triad_journies) - sub
+    def calculate_triad_score(self, triad):  
 
-        hire_delta = datetime.now() - triad_data['hired_at']
-        num_new_hires = (hire_delta < pd.Timedelta(days=180)).sum() / len(triad_data)
+        combined = self.people_info_df[['first_name', 'email_address', 'journey','discipline','tenure']] # TODO: do we need this anyway? 
+        triad_data = combined[combined['email_address'].isin(triad.email_address)]
+        
+        group_projects = []
+        print(triad['email_address'])
+        for email_address in triad.email_address:
+            projects = self.project_lists[email_address]
+            for project in projects:
+                group_projects.append(project)
+            
+        group_projects = pd.Series(group_projects)
+        num_overlap = group_projects.value_counts()[group_projects.value_counts() > 1].count()/len(set(group_projects))
+        num_disciplines = len(triad_data.discipline.unique())/len(triad_data)
+        num_journies = len(triad_data.journey.unique())/len(triad_data)
 
-        score_dict = {'discipline': num_disciplines, 'journey': num_journies, 'new_hire': num_new_hires,
+        score_dict = {'discipline': num_disciplines, 
+                      'journey': num_journies, 
                       'core_project': num_overlap}
 
         triad_score = self.scoring_function(score_dict)
@@ -141,7 +115,8 @@ class BatchGenerator:
 
         return triad_score / self.perfect_score
 
-    def scoring_function(self, score_dict):  # base class
+    def scoring_function(self, score_dict):  
+        # TO DO: minimize instead of maximize score 
         score_weights = self.score_weights
 
         triad_score = 0
@@ -198,7 +173,7 @@ class BatchGenerator:
         score = self.calculate_triad_score(triad)
         bl_check = self.check_bl(triad)
 
-        return (score > self.min_score and bl_check), score
+        return (score > (1-self.min_score) and bl_check), score
 
     def get_previous_pairings(self):
         import glob
@@ -254,11 +229,10 @@ class BatchGenerator:
         return len(BL_intersection) == 0
 
     def generate_batch(self):  # paired lunch
-        batch_df = self.combined.copy()
+        batch_df = self.people_info_df[['first_name','email_address','journey','tenure','discipline']].copy()
         print(batch_df)
         print('combined length is ', len(batch_df))
 
-        batch_df['tenure'] = datetime.now() - batch_df['hired_at']
         batch_df['number_of_meetings'] = 0
         batch_df['max_meetings'] = settings.max_meetings  # default max_meetings is 2
 
@@ -311,7 +285,7 @@ class BatchGenerator:
                 batch_df.loc[
                     triad.index, 'number_of_meetings'] += 1
 
-                suggested_triads.append(triad[['first_name', 'discipline', 'Journey', 'email_address']])
+                suggested_triads.append(triad[['first_name', 'discipline', 'journey', 'email_address']])
                 scores.append(group_score)
 
         return suggested_triads, scores, batch_df

@@ -21,15 +21,15 @@ new_hire_days = 180
 
 # scoring settings
 min_score = 0.45
-score_weights = {'discipline': 3,
-                 'journey': 0.25,
-                 'new_hire': 0,
-                 'core_project': -2}
+score_weights = {'discipline': 1,
+                 'journey': 1,
+                 #'new_hire': 0,
+                 'core_project': 5}
 
 # settings for ideal group
-ideal_group = {'discipline': 3,
-               'journey': 3,
-               'new_hire': 1,
+ideal_group = {'discipline': 1,
+               'journey': 1,
+               #'new_hire': 1,
                'core_project': 0}
 
 # special settings
