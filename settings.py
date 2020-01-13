@@ -9,7 +9,6 @@ if not os.path.exists(save_directory):
 
 inside_ideo_json = DATA_DIRECTORY + 'project_json.json' # this json has the project lists
 inside_ideo_csv = DATA_DIRECTORY + 'directory_data.csv'
-bl_list_csv = DATA_DIRECTORY + 'BLs.csv'
 suggested_triads = save_directory + 'triads_jan_2020.csv'
 batch_info = save_directory + 'triads_info_jan_2020.csv'
 

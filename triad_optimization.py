@@ -2,18 +2,15 @@
 
 import json
 from datetime import datetime
-
 import numpy as np
 import pandas as pd
-
 import settings
-
 
 class BatchGenerator:
     def __init__(self, batch_settings):
         self.people_info_df = pd.read_csv(batch_settings.inside_ideo_csv, parse_dates=['hired_at'])
         self.people_info_df = self.recode_disciplines()
-        self.BL_list = pd.read_csv(batch_settings.bl_list_csv)
+        self.people_info_df['business_lead'] = self.get_bls()
         self.pairing_file = batch_settings.save_directory + 'previous_groupings.csv'
         self.previous_pairings = self.get_previous_pairings()
 
@@ -65,10 +62,13 @@ class BatchGenerator:
 
     def recode_hire_date(self):
         # TODO: break this out into its own preprocessing function
-
-
-    
-
+        return
+ 
+    def get_bls(self):
+        em_id_to_email = pd.Series(self.people_info_df.email_address.values,
+                                   index=self.people_info_df.em_id).to_dict() 
+        bls = self.people_info_df['business_lead_em_id'].replace(em_id_to_email)
+        return bls
 
     def calculate_triad_score(self, triad):  # paired lunch specific
 
@@ -241,20 +241,16 @@ class BatchGenerator:
 
         return two_list
 
-    def check_bl(self, triad):  # paired lunch
-        # make pairs from triad
-    
+    def check_bl(self, triad):  
+        # get set of all pairs from triad
         email_ad = triad.email_address.values
-        two_list = self.create_two_list_for_triad(email_ad)
+        two_list = set(self.create_two_list_for_triad(email_ad))
         
         # check against BL
-        two_list = set(two_list)
-
-        BL_list = self.BL_list
+        BL_list = self.people_info_df[['email_address','business_lead']] 
         BL_list = set([frozenset(BL_list.iloc[i].values) for i in range(len(BL_list))])
-
         BL_intersection = two_list.intersection(BL_list)
-
+        
         return len(BL_intersection) == 0
 
     def generate_batch(self):  # paired lunch
